@@ -1,0 +1,5 @@
+{
+  "name": "SpendWise",
+  "description": "A smart monthly budget manager with AI expense categorization, savings goals, and progress visualization.",
+  "requestFramePermissions": []
+}

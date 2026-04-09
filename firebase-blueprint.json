@@ -1,0 +1,93 @@
+{
+  "entities": {
+    "Expense": {
+      "title": "Expense",
+      "description": "A single expense transaction",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" }
+      },
+      "required": ["amount", "description", "category", "date", "userId"]
+    },
+    "Income": {
+      "title": "Income",
+      "description": "A single income transaction",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" }
+      },
+      "required": ["amount", "description", "date", "userId"]
+    },
+    "SavingsGoal": {
+      "title": "Savings Goal",
+      "description": "A financial target to save for",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "targetAmount": { "type": "number" },
+        "currentAmount": { "type": "number" },
+        "deadline": { "type": "string", "format": "date" },
+        "userId": { "type": "string" }
+      },
+      "required": ["name", "targetAmount", "currentAmount", "userId"]
+    },
+    "Bill": {
+      "title": "Bill",
+      "description": "A recurring monthly bill",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "amount": { "type": "number" },
+        "dueDate": { "type": "number" },
+        "category": { "type": "string" },
+        "isPaid": { "type": "boolean" },
+        "userId": { "type": "string" }
+      },
+      "required": ["name", "amount", "dueDate", "category", "isPaid", "userId"]
+    },
+    "Budget": {
+      "title": "Budget",
+      "description": "User's monthly budget settings",
+      "type": "object",
+      "properties": {
+        "monthlyLimit": { "type": "number" },
+        "categories": { "type": "object" },
+        "userId": { "type": "string" }
+      },
+      "required": ["monthlyLimit", "categories", "userId"]
+    }
+  },
+  "firestore": {
+    "/expenses/{expenseId}": {
+      "schema": "Expense",
+      "description": "User expenses"
+    },
+    "/income/{incomeId}": {
+      "schema": "Income",
+      "description": "User income"
+    },
+    "/goals/{goalId}": {
+      "schema": "SavingsGoal",
+      "description": "User savings goals"
+    },
+    "/bills/{billId}": {
+      "schema": "Bill",
+      "description": "User bills"
+    },
+    "/budgets/{userId}": {
+      "schema": "Budget",
+      "description": "User budget settings"
+    }
+  }
+}
