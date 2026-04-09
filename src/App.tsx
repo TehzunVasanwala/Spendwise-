@@ -75,26 +75,9 @@ export default function App() {
 
   // Auth Listener
   useEffect(() => {
-    const checkRedirect = async () => {
-      setIsLoggingIn(true);
-      setAuthError(null);
-      try {
-        const result = await handleRedirectResult();
-        if (result) {
-          console.log("Redirect success:", result.user.email);
-        }
-      } catch (error: any) {
-        console.error("Redirect error:", error);
-        setAuthError(error.message || "An error occurred during sign in.");
-      } finally {
-        setIsLoggingIn(false);
-      }
-    };
-    
-    checkRedirect();
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      console.log("Auth state changed. User:", firebaseUser?.email || "None");
+      setUser(firebaseUser);
       setIsAuthReady(true);
     });
     return () => unsubscribe();
@@ -261,7 +244,21 @@ export default function App() {
     }
   };
 
-  if (!isAuthReady || isLoggingIn) {
+  const handleLogin = async () => {
+    setAuthError(null);
+    try {
+      await loginWithGoogle();
+    } catch (error: any) {
+      console.error("Login error:", error);
+      if (error.code === 'auth/popup-blocked') {
+        setAuthError("Popup blocked! Please allow popups for this site in your browser settings.");
+      } else {
+        setAuthError(error.message || "An error occurred during sign in.");
+      }
+    }
+  };
+
+  if (!isAuthReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5]">
         <div className="flex flex-col items-center gap-4">
@@ -292,7 +289,7 @@ export default function App() {
         )}
 
         <button 
-          onClick={loginWithGoogle}
+          onClick={handleLogin}
           className="flex items-center gap-3 px-8 py-4 bg-white border border-gray-200 rounded-2xl font-bold shadow-sm hover:bg-gray-50 transition-all active:scale-95"
         >
           <LogIn className="w-5 h-5" />
