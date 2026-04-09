@@ -42,6 +42,7 @@ import {
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'expenses' | 'goals' | 'bills' | 'insights' | 'settings'>('dashboard');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
@@ -73,8 +74,18 @@ export default function App() {
 
   // Auth Listener
   useEffect(() => {
-    // Handle the result of a redirect login
-    handleRedirectResult().catch(console.error);
+    const checkRedirect = async () => {
+      setIsLoggingIn(true);
+      try {
+        await handleRedirectResult();
+      } catch (error) {
+        console.error("Redirect error:", error);
+      } finally {
+        setIsLoggingIn(false);
+      }
+    };
+    
+    checkRedirect();
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
@@ -244,10 +255,13 @@ export default function App() {
     }
   };
 
-  if (!isAuthReady) {
+  if (!isAuthReady || isLoggingIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+          <p className="text-sm font-medium text-gray-500">Checking authentication...</p>
+        </div>
       </div>
     );
   }
