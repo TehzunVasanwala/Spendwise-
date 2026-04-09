@@ -16,7 +16,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { cn } from './lib/utils';
-import { Expense, Income, SavingsGoal, Budget, Category, Bill, QuickPreset } from './types';
+import { Expense, Income, SavingsGoal, Budget, Category, Bill, QuickPreset, UserStats, SpendingPrediction } from './types';
 import Dashboard from './components/Dashboard';
 import ExpenseList from './components/ExpenseList';
 import SavingsGoals from './components/SavingsGoals';
@@ -48,6 +48,12 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBtn, setShowInstallBtn] = useState(false);
+  const [userStats, setUserStats] = useState<UserStats>({
+    currentStreak: 0,
+    longestStreak: 0,
+    badges: [],
+    lastUpdateDate: new Date().toISOString()
+  });
   
   // State
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -126,6 +132,21 @@ export default function App() {
       setGoals(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as SavingsGoal)));
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'goals'));
 
+    const statsDoc = doc(db, 'stats', user.uid);
+    const unsubStats = onSnapshot(statsDoc, (snapshot) => {
+      if (snapshot.exists()) {
+        setUserStats(snapshot.data() as UserStats);
+      } else {
+        const initialStats: UserStats = {
+          currentStreak: 0,
+          longestStreak: 0,
+          badges: [],
+          lastUpdateDate: new Date().toISOString()
+        };
+        setDoc(statsDoc, initialStats).catch(e => handleFirestoreError(e, OperationType.WRITE, `stats/${user.uid}`));
+      }
+    }, (error) => handleFirestoreError(error, OperationType.GET, `stats/${user.uid}`));
+
     const budgetDoc = doc(db, 'budgets', user.uid);
     const unsubBudget = onSnapshot(budgetDoc, (snapshot) => {
       if (snapshot.exists()) {
@@ -154,9 +175,69 @@ export default function App() {
       unsubIncome();
       unsubGoals();
       unsubBills();
+      unsubStats();
       unsubBudget();
     };
   }, [user]);
+
+  const updateStats = async () => {
+    if (!user || !budget) return;
+    
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const lastUpdateStr = userStats.lastUpdateDate.split('T')[0];
+    
+    if (todayStr === lastUpdateStr) return; // Already updated today
+    
+    // Check yesterday's spending
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
+    const yesterdayExpenses = expenses.filter(e => e.date.startsWith(yesterdayStr));
+    const yesterdayTotal = yesterdayExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const dailyLimit = budget.monthlyLimit / 30;
+    
+    let newStreak = userStats.currentStreak;
+    if (yesterdayTotal <= dailyLimit && yesterdayExpenses.length > 0) {
+      newStreak += 1;
+    } else if (yesterdayTotal > dailyLimit) {
+      newStreak = 0;
+    }
+    
+    const newLongest = Math.max(newStreak, userStats.longestStreak);
+    
+    // Check for new badges
+    const newBadges = [...userStats.badges];
+    const badgeCheck = (id: string, name: string, desc: string, icon: string, condition: boolean) => {
+      if (condition && !newBadges.find(b => b.id === id)) {
+        newBadges.push({ id, name, description: desc, icon, unlockedAt: new Date().toISOString() });
+      }
+    };
+    
+    badgeCheck('streak-3', '3 Day Streak', 'Stayed under budget for 3 days!', '🔥', newStreak >= 3);
+    badgeCheck('streak-7', 'Week Warrior', 'Stayed under budget for 7 days!', '🛡️', newStreak >= 7);
+    badgeCheck('first-goal', 'Goal Setter', 'Created your first savings goal!', '🎯', goals.length > 0);
+    
+    const updatedStats: UserStats = {
+      currentStreak: newStreak,
+      longestStreak: newLongest,
+      badges: newBadges,
+      lastUpdateDate: today.toISOString()
+    };
+    
+    try {
+      await setDoc(doc(db, 'stats', user.uid), updatedStats);
+    } catch (error) {
+      console.error("Error updating stats:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (user && budget && expenses.length > 0) {
+      updateStats();
+    }
+  }, [user, budget, expenses]);
 
   const addTransaction = async (data: any) => {
     if (!user) return;
@@ -419,7 +500,7 @@ export default function App() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <Insights expenses={expenses} income={income} budget={budget} />
+              <Insights expenses={expenses} income={income} budget={budget} userStats={userStats} />
             </motion.div>
           )}
 

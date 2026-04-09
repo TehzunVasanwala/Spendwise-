@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { Category, Expense, Income, Budget } from "../types";
+import { Category, Expense, Income, Budget, SpendingPrediction } from "../types";
 
 let aiInstance: GoogleGenAI | null = null;
 
@@ -41,6 +41,54 @@ export async function categorizeExpense(description: string, availableCategories
   } catch (error) {
     console.error("Error categorizing expense:", error);
     return availableCategories[0] || 'Other';
+  }
+}
+
+export async function getSpendingPrediction(expenses: Expense[], budget: Budget): Promise<SpendingPrediction> {
+  try {
+    const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const today = new Date();
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const currentDay = today.getDate();
+    
+    const prompt = `Analyze these expenses and predict the end-of-month total.
+    - Current Day of Month: ${currentDay}/${daysInMonth}
+    - Monthly Budget: ₹${budget.monthlyLimit}
+    - Total Spent So Far: ₹${totalSpent}
+    - Recent Expenses: ${JSON.stringify(expenses.slice(-10))}
+    
+    Predict if the user will exceed their budget and provide a recommendation.`;
+
+    const ai = getAI();
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            forecastedTotal: { type: Type.NUMBER },
+            isOverBudget: { type: Type.BOOLEAN },
+            daysUntilLimitReached: { type: Type.NUMBER, nullable: true },
+            recommendation: { type: Type.STRING },
+            confidence: { type: Type.NUMBER },
+          },
+          required: ["forecastedTotal", "isOverBudget", "recommendation", "confidence"],
+        },
+      },
+    });
+
+    return JSON.parse(response.text) as SpendingPrediction;
+  } catch (error) {
+    console.error("Error getting spending prediction:", error);
+    return {
+      forecastedTotal: 0,
+      isOverBudget: false,
+      daysUntilLimitReached: null,
+      recommendation: "Keep tracking to see your prediction!",
+      confidence: 0
+    };
   }
 }
 

@@ -49,3 +49,26 @@ export interface QuickPreset {
   category: Category;
   icon: string;
 }
+
+export interface UserStats {
+  currentStreak: number;
+  longestStreak: number;
+  badges: Badge[];
+  lastUpdateDate: string;
+}
+
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  unlockedAt: string;
+}
+
+export interface SpendingPrediction {
+  forecastedTotal: number;
+  isOverBudget: boolean;
+  daysUntilLimitReached: number | null;
+  recommendation: string;
+  confidence: number;
+}

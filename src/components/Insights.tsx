@@ -1,29 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Sparkles, Loader2, BrainCircuit, TrendingUp, TrendingDown } from 'lucide-react';
-import { Expense, Income, Budget } from '../types';
-import { getFinancialAdvice } from '../services/geminiService';
+import { Sparkles, Loader2, BrainCircuit, TrendingUp, TrendingDown, Flame, Trophy, Calendar, Target, AlertCircle } from 'lucide-react';
+import { Expense, Income, Budget, UserStats, SpendingPrediction } from '../types';
+import { getFinancialAdvice, getSpendingPrediction } from '../services/geminiService';
+import { cn } from '../lib/utils';
 
 interface InsightsProps {
   expenses: Expense[];
   income: Income[];
   budget: Budget;
+  userStats: UserStats;
 }
 
-export default function Insights({ expenses, income, budget }: InsightsProps) {
+export default function Insights({ expenses, income, budget, userStats }: InsightsProps) {
   const [advice, setAdvice] = useState<string>('');
+  const [prediction, setPrediction] = useState<SpendingPrediction | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPredicting, setIsPredicting] = useState(false);
 
-  const fetchAdvice = async () => {
+  const fetchData = async () => {
     setIsLoading(true);
-    const result = await getFinancialAdvice(expenses, income, budget);
-    setAdvice(result);
-    setIsLoading(false);
+    setIsPredicting(true);
+    
+    try {
+      const [adviceResult, predictionResult] = await Promise.all([
+        getFinancialAdvice(expenses, income, budget),
+        getSpendingPrediction(expenses, budget)
+      ]);
+      setAdvice(adviceResult);
+      setPrediction(predictionResult);
+    } catch (error) {
+      console.error("Error fetching insights:", error);
+    } finally {
+      setIsLoading(false);
+      setIsPredicting(false);
+    }
   };
 
   useEffect(() => {
     if (expenses.length > 0 || income.length > 0) {
-      fetchAdvice();
+      fetchData();
     }
   }, []);
 
@@ -32,11 +48,11 @@ export default function Insights({ expenses, income, budget }: InsightsProps) {
   const netFlow = totalIncome - totalSpent;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold tracking-tight">AI Insights</h2>
         <button 
-          onClick={fetchAdvice}
+          onClick={fetchData}
           disabled={isLoading}
           className="p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-colors disabled:opacity-50"
         >
@@ -44,26 +60,88 @@ export default function Insights({ expenses, income, budget }: InsightsProps) {
         </button>
       </div>
 
-      {/* Quick Stats */}
+      {/* Gamification Stats */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="w-3 h-3 text-green-500" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Net Flow</span>
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm flex flex-col items-center text-center">
+          <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center mb-3">
+            <Flame className={cn("w-6 h-6", userStats.currentStreak > 0 ? "text-orange-500 fill-orange-500" : "text-gray-300")} />
           </div>
-          <p className={`text-lg font-black ${netFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {netFlow >= 0 ? '+' : ''}₹{netFlow.toLocaleString('en-IN')}
-          </p>
+          <p className="text-2xl font-black text-gray-900">{userStats.currentStreak}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Day Streak</p>
         </div>
-        <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 mb-1">
-            <TrendingDown className="w-3 h-3 text-red-500" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Savings Rate</span>
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm flex flex-col items-center text-center">
+          <div className="w-12 h-12 bg-yellow-50 rounded-2xl flex items-center justify-center mb-3">
+            <Trophy className={cn("w-6 h-6", userStats.badges.length > 0 ? "text-yellow-500" : "text-gray-300")} />
           </div>
-          <p className="text-lg font-black text-indigo-600">
-            {totalIncome > 0 ? ((netFlow / totalIncome) * 100).toFixed(0) : 0}%
-          </p>
+          <p className="text-2xl font-black text-gray-900">{userStats.badges.length}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Badges Won</p>
         </div>
+      </div>
+
+      {/* AI Spending Prediction */}
+      <div className="bg-white rounded-[32px] p-6 border border-gray-100 shadow-sm overflow-hidden relative">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
+            <Calendar className="w-5 h-5 text-purple-600" />
+          </div>
+          <div>
+            <h3 className="font-bold">Monthly Forecast</h3>
+            <p className="text-xs text-gray-500">AI Prediction for end of month</p>
+          </div>
+        </div>
+
+        {isPredicting ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 text-purple-400 animate-spin mb-2" />
+            <p className="text-xs text-gray-400">Calculating forecast...</p>
+          </div>
+        ) : prediction ? (
+          <div className="space-y-6">
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Predicted Total</p>
+                <p className={cn("text-3xl font-black", prediction.isOverBudget ? "text-red-600" : "text-green-600")}>
+                  ₹{prediction.forecastedTotal.toLocaleString('en-IN')}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Confidence</p>
+                <div className="flex items-center gap-1">
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div 
+                        key={i} 
+                        className={cn(
+                          "w-1 h-3 rounded-full", 
+                          i <= prediction.confidence ? "bg-purple-500" : "bg-gray-100"
+                        )} 
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className={cn(
+              "p-4 rounded-2xl flex gap-3",
+              prediction.isOverBudget ? "bg-red-50" : "bg-green-50"
+            )}>
+              {prediction.isOverBudget ? (
+                <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+              ) : (
+                <Target className="w-5 h-5 text-green-600 shrink-0" />
+              )}
+              <p className={cn(
+                "text-xs font-medium leading-relaxed",
+                prediction.isOverBudget ? "text-red-900" : "text-green-900"
+              )}>
+                {prediction.recommendation}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-400 text-center py-4">Add more expenses to see your forecast.</p>
+        )}
       </div>
 
       {/* AI Coach Card */}
@@ -90,7 +168,7 @@ export default function Insights({ expenses, income, budget }: InsightsProps) {
                 {advice}
               </div>
               <button 
-                onClick={fetchAdvice}
+                onClick={fetchData}
                 className="text-xs font-bold text-indigo-400 hover:text-white transition-colors flex items-center gap-1"
               >
                 Refresh Advice <TrendingUp className="w-3 h-3" />
@@ -100,7 +178,7 @@ export default function Insights({ expenses, income, budget }: InsightsProps) {
             <div className="text-center py-8">
               <p className="text-sm text-indigo-200 mb-4">Start tracking your expenses to get personalized financial advice.</p>
               <button 
-                onClick={fetchAdvice}
+                onClick={fetchData}
                 className="px-6 py-3 bg-indigo-600 rounded-2xl text-xs font-bold hover:bg-indigo-500 transition-colors"
               >
                 Get Initial Advice
