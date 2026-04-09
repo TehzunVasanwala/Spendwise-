@@ -25,7 +25,7 @@ import Insights from './components/Insights';
 import BudgetSettings from './components/BudgetSettings';
 import Bills from './components/Bills';
 import { BrainCircuit, Calendar as CalendarIcon } from 'lucide-react';
-import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType, handleRedirectResult } from './firebase';
+import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { 
   collection, 
@@ -46,6 +46,8 @@ export default function App() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'expenses' | 'goals' | 'bills' | 'insights' | 'settings'>('dashboard');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBtn, setShowInstallBtn] = useState(false);
   
   // State
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -75,12 +77,23 @@ export default function App() {
 
   // Auth Listener
   useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBtn(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       console.log("Auth state changed. User:", firebaseUser?.email || "None");
       setUser(firebaseUser);
       setIsAuthReady(true);
     });
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, []);
 
   // Firestore Listeners
@@ -241,6 +254,16 @@ export default function App() {
       setActiveTab('dashboard');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `budgets/${user.uid}`);
+    }
+  };
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+      setShowInstallBtn(false);
     }
   };
 
@@ -408,7 +431,12 @@ export default function App() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <BudgetSettings budget={budget} onUpdate={updateBudget} />
+              <BudgetSettings 
+                budget={budget} 
+                onUpdate={updateBudget} 
+                showInstallBtn={showInstallBtn}
+                onInstall={handleInstall}
+              />
             </motion.div>
           )}
         </AnimatePresence>

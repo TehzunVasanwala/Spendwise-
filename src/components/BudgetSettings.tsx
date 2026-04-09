@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Plus, Trash2, Save, X, Settings2 } from 'lucide-react';
+import { Plus, Trash2, Save, X, Settings2, Download } from 'lucide-react';
 import { Budget } from '../types';
 import { cn } from '../lib/utils';
 
 interface BudgetSettingsProps {
   budget: Budget;
   onUpdate: (updatedBudget: Budget) => void;
+  showInstallBtn?: boolean;
+  onInstall?: () => void;
 }
 
-export default function BudgetSettings({ budget, onUpdate }: BudgetSettingsProps) {
+export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onInstall }: BudgetSettingsProps) {
   const [localBudget, setLocalBudget] = useState<Budget>(budget);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryLimit, setNewCategoryLimit] = useState('');
@@ -131,6 +133,27 @@ export default function BudgetSettings({ budget, onUpdate }: BudgetSettingsProps
         <p className="text-indigo-100 text-sm font-medium mb-1">Total Monthly Limit</p>
         <h3 className="text-3xl font-black">₹{(Object.values(localBudget.categories).reduce((sum: number, limit: number) => sum + limit, 0) as number).toLocaleString('en-IN')}</h3>
       </div>
+
+      {showInstallBtn && (
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
+              <Download className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <h3 className="font-bold">Install App</h3>
+              <p className="text-xs text-gray-500">Install SpendWise on your home screen</p>
+            </div>
+          </div>
+          <button 
+            onClick={onInstall}
+            className="w-full py-3 bg-black text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Install Now
+          </button>
+        </div>
+      )}
     </div>
   );
 }
