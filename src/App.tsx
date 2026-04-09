@@ -25,7 +25,7 @@ import Insights from './components/Insights';
 import BudgetSettings from './components/BudgetSettings';
 import Bills from './components/Bills';
 import { BrainCircuit, Calendar as CalendarIcon } from 'lucide-react';
-import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './firebase';
+import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType, handleRedirectResult } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { 
   collection, 
@@ -73,6 +73,9 @@ export default function App() {
 
   // Auth Listener
   useEffect(() => {
+    // Handle the result of a redirect login
+    handleRedirectResult().catch(console.error);
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setIsAuthReady(true);
