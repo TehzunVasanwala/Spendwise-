@@ -95,12 +95,15 @@ export async function suggestBudgetDistribution(totalLimit: number, categories: 
   try {
     const prompt = `Suggest a budget distribution for a total monthly limit of ₹${totalLimit} across these categories: ${categories.join(', ')}.
     Follow a realistic distribution for a middle-class individual in India. 
-    Prioritize:
-    1. Fixed Costs (Rent, EMI)
-    2. Essential Living (Groceries, Utilities, Transport)
-    3. Savings (Trip Fund, Emergency Buffer)
-    4. Minimize Lifestyle (Eating Out, Misc) to maximize savings.
     
+    Rules for distribution:
+    1. Rent/EMI should be around 30-40% of the total if present.
+    2. Essentials (Groceries, Utilities) should be around 20-25%.
+    3. Transport should be around 5-10%.
+    4. Savings/Buffer should be at least 10-15%.
+    5. Lifestyle (Eating out, Movies, Misc) should be minimized (5-10%).
+    
+    Return a JSON object where keys are the category names and values are the calculated amounts.
     Ensure the sum of all category limits exactly equals ₹${totalLimit}.`;
 
     const response = await ai.models.generateContent({

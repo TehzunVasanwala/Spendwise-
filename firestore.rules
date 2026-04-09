@@ -82,7 +82,10 @@ service cloud.firestore {
     }
 
     function isValidDate(dateStr) {
-      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+      return dateStr is string && (
+        dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$") ||
+        dateStr.matches("^\\d{4}-\\d{2}-\\d{2}$")
+      );
     }
 
     function isAdmin() {
@@ -99,7 +102,8 @@ service cloud.firestore {
     // ===============================================================
 
     function isValidExpense(data) {
-      return data.keys().hasAll(['amount', 'description', 'category', 'date', 'userId']) &&
+      return data.keys().hasOnly(['amount', 'description', 'category', 'date', 'userId']) &&
+             data.keys().hasAll(['amount', 'description', 'category', 'date', 'userId']) &&
              data.amount is number && data.amount > 0 &&
              isValidString(data.description, 100) &&
              isValidString(data.category, 50) &&
@@ -108,7 +112,8 @@ service cloud.firestore {
     }
 
     function isValidIncome(data) {
-      return data.keys().hasAll(['amount', 'description', 'date', 'userId']) &&
+      return data.keys().hasOnly(['amount', 'description', 'date', 'userId']) &&
+             data.keys().hasAll(['amount', 'description', 'date', 'userId']) &&
              data.amount is number && data.amount > 0 &&
              isValidString(data.description, 100) &&
              isValidDate(data.date) &&
@@ -116,7 +121,8 @@ service cloud.firestore {
     }
 
     function isValidGoal(data) {
-      return data.keys().hasAll(['name', 'targetAmount', 'currentAmount', 'deadline', 'userId']) &&
+      return data.keys().hasOnly(['name', 'targetAmount', 'currentAmount', 'deadline', 'userId']) &&
+             data.keys().hasAll(['name', 'targetAmount', 'currentAmount', 'deadline', 'userId']) &&
              isValidString(data.name, 50) &&
              data.targetAmount is number && data.targetAmount > 0 &&
              data.currentAmount is number && data.currentAmount >= 0 &&
@@ -125,7 +131,8 @@ service cloud.firestore {
     }
 
     function isValidBill(data) {
-      return data.keys().hasAll(['name', 'amount', 'dueDate', 'category', 'isPaid', 'userId']) &&
+      return data.keys().hasOnly(['name', 'amount', 'dueDate', 'category', 'isPaid', 'userId']) &&
+             data.keys().hasAll(['name', 'amount', 'dueDate', 'category', 'isPaid', 'userId']) &&
              isValidString(data.name, 50) &&
              data.amount is number && data.amount > 0 &&
              data.dueDate is number && data.dueDate >= 1 && data.dueDate <= 31 &&
@@ -134,14 +141,17 @@ service cloud.firestore {
     }
 
     function isValidBudget(data) {
-      return data.keys().hasAll(['monthlyLimit', 'categories', 'userId']) &&
+      return data.keys().hasOnly(['monthlyLimit', 'salary', 'categories', 'userId']) &&
+             data.keys().hasAll(['monthlyLimit', 'categories', 'userId']) &&
              data.monthlyLimit is number && data.monthlyLimit > 0 &&
+             (!('salary' in data) || (data.salary is number && data.salary >= 0)) &&
              data.categories is map &&
              data.userId == request.auth.uid;
     }
 
     function isValidStats(data) {
-      return data.keys().hasAll(['currentStreak', 'longestStreak', 'badges', 'lastUpdateDate']) &&
+      return data.keys().hasOnly(['currentStreak', 'longestStreak', 'badges', 'lastUpdateDate']) &&
+             data.keys().hasAll(['currentStreak', 'longestStreak', 'badges', 'lastUpdateDate']) &&
              data.currentStreak is number && data.currentStreak >= 0 &&
              data.longestStreak is number && data.longestStreak >= 0 &&
              data.badges is list &&

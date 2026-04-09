@@ -21,6 +21,7 @@ import Dashboard from './components/Dashboard';
 import ExpenseList from './components/ExpenseList';
 import SavingsGoals from './components/SavingsGoals';
 import AddTransaction from './components/AddTransaction';
+import AddGoal from './components/AddGoal';
 import Insights from './components/Insights';
 import BudgetSettings from './components/BudgetSettings';
 import Bills from './components/Bills';
@@ -46,6 +47,7 @@ export default function App() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'expenses' | 'goals' | 'bills' | 'insights' | 'settings'>('dashboard');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBtn, setShowInstallBtn] = useState(false);
   const [userStats, setUserStats] = useState<UserStats>({
@@ -355,6 +357,29 @@ export default function App() {
     }
   };
 
+  const addGoal = async (data: { name: string; targetAmount: number; currentAmount: number; deadline: string }) => {
+    if (!user) return;
+    try {
+      const newGoal = {
+        ...data,
+        userId: user.uid
+      };
+      await addDoc(collection(db, 'goals'), newGoal);
+      setIsAddGoalModalOpen(false);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'goals');
+    }
+  };
+
+  const deleteGoal = async (id: string) => {
+    if (!user) return;
+    try {
+      await deleteDoc(doc(db, 'goals', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `goals/${id}`);
+    }
+  };
+
   const updateBudget = async (updatedBudget: Budget) => {
     if (!user) return;
     try {
@@ -503,7 +528,12 @@ export default function App() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <SavingsGoals goals={goals} onUpdate={updateGoal} />
+              <SavingsGoals 
+                goals={goals} 
+                onUpdate={updateGoal} 
+                onDelete={deleteGoal}
+                onAddClick={() => setIsAddGoalModalOpen(true)}
+              />
             </motion.div>
           )}
 
@@ -607,6 +637,16 @@ export default function App() {
             onClose={() => setIsAddModalOpen(false)} 
             onAdd={addTransaction} 
             categories={Object.keys(budget.categories)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Add Goal Modal */}
+      <AnimatePresence>
+        {isAddGoalModalOpen && (
+          <AddGoal 
+            onClose={() => setIsAddGoalModalOpen(false)} 
+            onAdd={addGoal} 
           />
         )}
       </AnimatePresence>

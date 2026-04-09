@@ -151,30 +151,41 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
         </div>
 
         <div className="space-y-4">
-          {Object.entries(localBudget.categories).map(([category, limit]) => (
-            <div key={category} className="flex items-center gap-3">
-              <div className="flex-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">
-                  {category}
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
-                  <input 
-                    type="number"
-                    value={limit}
-                    onChange={(e) => handleUpdateLimit(category, parseFloat(e.target.value) || 0)}
-                    className="w-full pl-7 pr-4 py-2 bg-gray-50 border-none rounded-xl font-bold focus:ring-2 focus:ring-black transition-all"
-                  />
+          {Object.entries(localBudget.categories).map(([category, limit]) => {
+            const categoryValues = Object.values(localBudget.categories) as number[];
+            const totalLimit = categoryValues.reduce((sum: number, l: number) => sum + (l || 0), 0);
+            const percentage = totalLimit > 0 ? ((limit as number) / totalLimit) * 100 : 0;
+
+            return (
+              <div key={category} className="flex items-center gap-3">
+                <div className="flex-1">
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                      {category}
+                    </label>
+                    <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+                      {percentage.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
+                    <input 
+                      type="number"
+                      value={limit}
+                      onChange={(e) => handleUpdateLimit(category, parseFloat(e.target.value) || 0)}
+                      className="w-full pl-7 pr-4 py-2 bg-gray-50 border-none rounded-xl font-bold focus:ring-2 focus:ring-black transition-all"
+                    />
+                  </div>
                 </div>
+                <button 
+                  onClick={() => handleDeleteCategory(category)}
+                  className="mt-5 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
-              <button 
-                onClick={() => handleDeleteCategory(category)}
-                className="mt-5 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="mt-8 pt-8 border-t border-gray-100">
