@@ -24,13 +24,19 @@ interface DashboardProps {
 }
 
 const COLORS = {
-  Food: '#FF8042',
-  Transport: '#0088FE',
-  Entertainment: '#00C49F',
-  Shopping: '#FFBB28',
-  Utilities: '#8884d8',
-  Health: '#82ca9d',
-  Other: '#999'
+  'House Rent': '#6366f1',
+  'EMI': '#f43f5e',
+  'Groceries & Daily Needs': '#10b981',
+  'Utilities': '#8b5cf6',
+  'Internet + Mobile': '#06b6d4',
+  'Transport': '#f59e0b',
+  'Eating Out / Movies': '#ec4899',
+  'Personal / Misc': '#64748b',
+  'Savings / Buffer': '#22c55e',
+  'Food': '#FF8042',
+  'Shopping': '#FFBB28',
+  'Health': '#82ca9d',
+  'Other': '#999'
 };
 
 export default function Dashboard({ 
@@ -62,19 +68,35 @@ export default function Dashboard({
 
   const totalSpent = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
   const totalIncome = filteredIncome.reduce((sum, i) => sum + i.amount, 0);
-  const remainingBudget = budget.monthlyLimit - totalSpent;
-  const percentSpent = budget.monthlyLimit > 0 ? (totalSpent / budget.monthlyLimit) * 100 : 0;
-  const netFlow = totalIncome - totalSpent;
+  const effectiveIncome = budget.salary || totalIncome;
+  
+  // Use income as fallback if budget is not set
+  const effectiveLimit = budget.monthlyLimit > 0 ? budget.monthlyLimit : effectiveIncome;
+  const remainingBudget = effectiveLimit - totalSpent;
+  const percentSpent = effectiveLimit > 0 ? (totalSpent / effectiveLimit) * 100 : 0;
+  const isOverBudget = percentSpent > 100;
+  const netFlow = effectiveIncome - totalSpent;
 
   // Daily Allowance Calculation
   const dailyAllowance = useMemo(() => {
     const now = new Date();
-    if (!isSameMonth(now, selectedDate)) return 0;
+    if (!isSameMonth(now, selectedDate)) return { amount: 0, isExceeded: false };
     
     const lastDay = endOfMonth(now);
     const daysLeft = differenceInDays(lastDay, now) + 1;
-    return Math.max(0, remainingBudget / daysLeft);
-  }, [remainingBudget, selectedDate]);
+    
+    // Subtract upcoming unpaid bills from remaining budget to get "Safe to Spend"
+    const unpaidBillsTotal = bills
+      .filter(b => !b.isPaid && isSameMonth(new Date(), selectedDate))
+      .reduce((sum, b) => sum + b.amount, 0);
+      
+    const safeRemaining = remainingBudget - unpaidBillsTotal;
+    
+    return {
+      amount: Math.max(0, safeRemaining / daysLeft),
+      isExceeded: safeRemaining <= 0
+    };
+  }, [remainingBudget, selectedDate, bills]);
 
   const categoryData = useMemo(() => {
     const data: Record<string, number> = {};
@@ -125,9 +147,21 @@ export default function Dashboard({
               <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">Net Cash Flow</p>
               <h2 className="text-4xl font-black tracking-tight">₹{netFlow.toLocaleString('en-IN')}</h2>
             </div>
-            <div className="bg-white/10 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1">
-              <TrendingUp className="w-3 h-3 text-green-400" />
-              <span className="text-[10px] font-bold uppercase tracking-wider">Healthy</span>
+            <div className={cn(
+              "backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1",
+              isOverBudget ? "bg-red-500/20" : "bg-white/10"
+            )}>
+              {isOverBudget ? (
+                <>
+                  <AlertCircle className="w-3 h-3 text-red-400" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-red-400">Overspending</span>
+                </>
+              ) : (
+                <>
+                  <TrendingUp className="w-3 h-3 text-green-400" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider">Healthy</span>
+                </>
+              )}
             </div>
           </div>
           
@@ -142,20 +176,42 @@ export default function Dashboard({
             </div>
           </div>
 
+          {effectiveIncome > 0 && (
+            <div className="mb-8 p-4 bg-white/5 rounded-2xl border border-white/10">
+              <div className="flex justify-between items-center mb-1">
+                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Savings Potential</p>
+                <p className="text-xs font-bold text-green-400">₹{(effectiveIncome - totalSpent).toLocaleString('en-IN')}</p>
+              </div>
+              <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-green-500 transition-all duration-1000"
+                  style={{ width: `${Math.max(0, Math.min(100, ((effectiveIncome - totalSpent) / effectiveIncome) * 100))}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
             <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-500">
-              <span>Budget Usage</span>
-              <span>{percentSpent.toFixed(0)}%</span>
+              <span>{isOverBudget ? 'Over Budget' : 'Budget Usage'}</span>
+              <span className={cn(isOverBudget && "text-red-400 font-black")}>
+                {isOverBudget ? `+₹${(totalSpent - effectiveLimit).toLocaleString('en-IN')}` : `${percentSpent.toFixed(0)}%`}
+              </span>
             </div>
             <div className="h-2 bg-white/10 rounded-full overflow-hidden">
               <div 
                 className={cn(
                   "h-full transition-all duration-1000",
-                  percentSpent > 90 ? "bg-red-500" : percentSpent > 75 ? "bg-yellow-500" : "bg-white"
+                  isOverBudget ? "bg-red-500" : percentSpent > 75 ? "bg-yellow-500" : "bg-white"
                 )}
                 style={{ width: `${Math.min(percentSpent, 100)}%` }}
               />
             </div>
+            {isOverBudget && (
+              <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider animate-pulse">
+                ⚠️ You are over spending this month!
+              </p>
+            )}
           </div>
         </div>
         
@@ -165,15 +221,49 @@ export default function Dashboard({
       </div>
 
       {/* Daily Allowance Widget */}
-      <div className="bg-indigo-600 text-white rounded-3xl p-6 shadow-lg shadow-indigo-100 flex items-center justify-between">
-        <div>
-          <p className="text-indigo-200 text-[10px] font-bold uppercase tracking-widest mb-1">Daily Spending Limit</p>
-          <h3 className="text-3xl font-black tracking-tight">₹{dailyAllowance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
-          <p className="text-indigo-200 text-[10px] mt-1">Based on remaining budget</p>
+      <div className={cn(
+        "rounded-[40px] p-8 shadow-lg flex items-center justify-between relative overflow-hidden transition-all duration-500",
+        dailyAllowance.isExceeded ? "bg-red-500 text-white shadow-red-100" : "bg-indigo-600 text-white shadow-indigo-100"
+      )}>
+        <div className="relative z-10">
+          <p className={cn(
+            "text-[10px] font-bold uppercase tracking-widest mb-2",
+            dailyAllowance.isExceeded ? "text-red-100" : "text-indigo-200"
+          )}>
+            {dailyAllowance.isExceeded ? 'Budget Exceeded' : 'Daily Spending Limit'}
+          </p>
+          <div className="flex items-baseline gap-1">
+            <span className={cn(
+              "text-2xl font-black",
+              dailyAllowance.isExceeded ? "text-red-100" : "text-indigo-200"
+            )}>₹</span>
+            <h3 className="text-5xl font-black tracking-tighter">
+              {Math.floor(dailyAllowance.amount).toLocaleString('en-IN')}
+            </h3>
+            <span className={cn(
+              "text-xl font-bold ml-1",
+              dailyAllowance.isExceeded ? "text-red-100" : "text-indigo-200"
+            )}>
+              .{((dailyAllowance.amount % 1) * 100).toFixed(0).padStart(2, '0')}
+            </span>
+          </div>
+          <p className={cn(
+            "text-[10px] font-bold uppercase tracking-widest mt-2",
+            dailyAllowance.isExceeded ? "text-red-100" : "text-indigo-200"
+          )}>
+            {dailyAllowance.isExceeded ? 'Try to minimize expenses' : 'Safe to spend today'}
+          </p>
         </div>
-        <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-          <Coffee className="w-6 h-6" />
+        <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-[24px] flex items-center justify-center relative z-10">
+          {dailyAllowance.isExceeded ? (
+            <AlertCircle className="w-8 h-8 text-white" />
+          ) : (
+            <Coffee className="w-8 h-8 text-white" />
+          )}
         </div>
+        
+        {/* Decorative background element */}
+        <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/5 rounded-full blur-3xl" />
       </div>
 
       {/* Quick Presets */}

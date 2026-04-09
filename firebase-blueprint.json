@@ -66,6 +66,31 @@
         "userId": { "type": "string" }
       },
       "required": ["monthlyLimit", "categories", "userId"]
+    },
+    "Badge": {
+      "title": "Badge",
+      "description": "A gamification badge",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "icon": { "type": "string" },
+        "unlockedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "description", "icon", "unlockedAt"]
+    },
+    "UserStats": {
+      "title": "User Stats",
+      "description": "Gamification stats for the user",
+      "type": "object",
+      "properties": {
+        "currentStreak": { "type": "number" },
+        "longestStreak": { "type": "number" },
+        "badges": { "type": "array", "items": { "$ref": "Badge" } },
+        "lastUpdateDate": { "type": "string", "format": "date" }
+      },
+      "required": ["currentStreak", "longestStreak", "badges", "lastUpdateDate"]
     }
   },
   "firestore": {
@@ -88,6 +113,10 @@
     "/budgets/{userId}": {
       "schema": "Budget",
       "description": "User budget settings"
+    },
+    "/stats/{userId}": {
+      "schema": "UserStats",
+      "description": "User gamification stats"
     }
   }
 }

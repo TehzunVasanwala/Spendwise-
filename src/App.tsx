@@ -61,15 +61,18 @@ export default function App() {
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [budget, setBudget] = useState<Budget>({
-    monthlyLimit: 50000,
+    monthlyLimit: 40000,
+    salary: 50000,
     categories: {
-      Food: 10000,
-      Transport: 5000,
-      Entertainment: 5000,
-      Shopping: 10000,
-      Utilities: 5000,
-      Health: 5000,
-      Other: 10000
+      'House Rent': 17000,
+      'EMI': 2700,
+      'Groceries & Daily Needs': 6000,
+      'Utilities': 2500,
+      'Internet + Mobile': 1200,
+      'Transport': 2500,
+      'Eating Out / Movies': 2000,
+      'Personal / Misc': 2100,
+      'Savings / Buffer': 4000
     },
     userId: ''
   });
@@ -150,19 +153,40 @@ export default function App() {
     const budgetDoc = doc(db, 'budgets', user.uid);
     const unsubBudget = onSnapshot(budgetDoc, (snapshot) => {
       if (snapshot.exists()) {
-        setBudget(snapshot.data() as Budget);
+        const data = snapshot.data() as Budget;
+        setBudget(data);
+        // Auto-update old default (50k) to new default (40k) as requested
+        if (data.monthlyLimit === 50000) {
+          const updatedBudget: Budget = {
+            monthlyLimit: 40000,
+            categories: {
+              Food: 8000,
+              Transport: 4000,
+              Entertainment: 4000,
+              Shopping: 8000,
+              Utilities: 4000,
+              Health: 4000,
+              Other: 8000
+            },
+            userId: user.uid
+          };
+          setDoc(budgetDoc, updatedBudget).catch(e => handleFirestoreError(e, OperationType.WRITE, `budgets/${user.uid}`));
+        }
       } else {
         // Initialize default budget for new user
         const defaultBudget: Budget = {
-          monthlyLimit: 50000,
+          monthlyLimit: 40000,
+          salary: 50000,
           categories: {
-            Food: 10000,
-            Transport: 5000,
-            Entertainment: 5000,
-            Shopping: 10000,
-            Utilities: 5000,
-            Health: 5000,
-            Other: 10000
+            'House Rent': 17000,
+            'EMI': 2700,
+            'Groceries & Daily Needs': 6000,
+            'Utilities': 2500,
+            'Internet + Mobile': 1200,
+            'Transport': 2500,
+            'Eating Out / Movies': 2000,
+            'Personal / Misc': 2100,
+            'Savings / Buffer': 4000
           },
           userId: user.uid
         };
@@ -196,7 +220,10 @@ export default function App() {
     
     const yesterdayExpenses = expenses.filter(e => e.date.startsWith(yesterdayStr));
     const yesterdayTotal = yesterdayExpenses.reduce((sum, e) => sum + e.amount, 0);
-    const dailyLimit = budget.monthlyLimit / 30;
+    
+    // Calculate daily limit based on actual days in the month
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const dailyLimit = budget.monthlyLimit / daysInMonth;
     
     let newStreak = userStats.currentStreak;
     if (yesterdayTotal <= dailyLimit && yesterdayExpenses.length > 0) {

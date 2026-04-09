@@ -40,6 +40,13 @@
 //   - categories: map (required)
 //   - userId: string (required, matches auth.uid)
 //
+// Collection: stats
+// Fields:
+//   - currentStreak: number (required)
+//   - longestStreak: number (required)
+//   - badges: list (required)
+//   - lastUpdateDate: string (required, ISO 8601)
+//
 // ===============================================================
 
 rules_version = '2';
@@ -80,8 +87,11 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() &&
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-          (request.auth.token.email == "tehzun.vasanwala@bacancy.com" && request.auth.token.email_verified == true));
+        (
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+          (request.auth.token.email == "tehzun.vasanwala@bacancy.com" && request.auth.token.email_verified == true) ||
+          (request.auth.token.email == "tehzun45@gmail.com" && request.auth.token.email_verified == true)
+        );
     }
 
     // ===============================================================
@@ -130,46 +140,67 @@ service cloud.firestore {
              data.userId == request.auth.uid;
     }
 
+    function isValidStats(data) {
+      return data.keys().hasAll(['currentStreak', 'longestStreak', 'badges', 'lastUpdateDate']) &&
+             data.currentStreak is number && data.currentStreak >= 0 &&
+             data.longestStreak is number && data.longestStreak >= 0 &&
+             data.badges is list &&
+             isValidDate(data.lastUpdateDate);
+    }
+
     // ===============================================================
     // Match Rules
     // ===============================================================
 
     match /expenses/{expenseId} {
-      allow read: if isDocOwner() || isAdmin();
+      allow read: if isDocOwner();
+      allow read: if isAdmin();
       allow create: if isAuthenticated() && isValidExpense(request.resource.data);
       allow update: if isDocOwner() && isValidExpense(request.resource.data) && uidNotModified();
       allow delete: if isDocOwner() || isAdmin();
     }
 
     match /income/{incomeId} {
-      allow read: if isDocOwner() || isAdmin();
+      allow read: if isDocOwner();
+      allow read: if isAdmin();
       allow create: if isAuthenticated() && isValidIncome(request.resource.data);
       allow update: if isDocOwner() && isValidIncome(request.resource.data) && uidNotModified();
       allow delete: if isDocOwner() || isAdmin();
     }
 
     match /goals/{goalId} {
-      allow read: if isDocOwner() || isAdmin();
+      allow read: if isDocOwner();
+      allow read: if isAdmin();
       allow create: if isAuthenticated() && isValidGoal(request.resource.data);
       allow update: if isDocOwner() && isValidGoal(request.resource.data) && uidNotModified();
       allow delete: if isDocOwner() || isAdmin();
     }
 
     match /bills/{billId} {
-      allow read: if isDocOwner() || isAdmin();
+      allow read: if isDocOwner();
+      allow read: if isAdmin();
       allow create: if isAuthenticated() && isValidBill(request.resource.data);
       allow update: if isDocOwner() && isValidBill(request.resource.data) && uidNotModified();
       allow delete: if isDocOwner() || isAdmin();
     }
 
     match /budgets/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
+      allow read: if isOwner(userId);
+      allow read: if isAdmin();
       allow create, update: if isOwner(userId) && isValidBudget(request.resource.data);
       allow delete: if isAdmin();
     }
 
+    match /stats/{userId} {
+      allow read: if isOwner(userId);
+      allow read: if isAdmin();
+      allow create, update: if isOwner(userId) && isValidStats(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
+      allow read: if isOwner(userId);
+      allow read: if isAdmin();
       allow create, update: if isOwner(userId);
     }
   }

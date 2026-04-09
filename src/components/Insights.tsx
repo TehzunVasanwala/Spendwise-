@@ -145,58 +145,70 @@ export default function Insights({ expenses, income, budget, userStats }: Insigh
       </div>
 
       {/* AI Coach Card */}
-      <div className="bg-black text-white rounded-[32px] p-8 shadow-xl relative overflow-hidden">
+      <div className="bg-black text-white rounded-[40px] p-8 shadow-xl relative overflow-hidden">
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <BrainCircuit className="w-6 h-6 text-white" />
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <BrainCircuit className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-xl tracking-tight">Financial Coach</h3>
+                <p className="text-xs text-indigo-300 font-medium">AI Spending Analysis</p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-bold text-lg">Financial Coach</h3>
-              <p className="text-xs text-indigo-300">Powered by Gemini AI</p>
+            <div className="px-3 py-1 bg-white/10 rounded-full border border-white/10">
+              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Strict Mode</span>
             </div>
           </div>
 
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
               <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-              <p className="text-sm text-indigo-200 animate-pulse">Analyzing your spending habits...</p>
+              <p className="text-sm text-indigo-200 animate-pulse font-medium">Scanning for useless spending...</p>
             </div>
           ) : advice ? (
-            <div className="space-y-4">
-              <div className="text-sm leading-relaxed text-indigo-50 whitespace-pre-line">
+            <div className="space-y-6">
+              <div className="text-sm leading-relaxed text-indigo-50 whitespace-pre-line font-medium">
                 {advice}
               </div>
-              <button 
-                onClick={fetchData}
-                className="text-xs font-bold text-indigo-400 hover:text-white transition-colors flex items-center gap-1"
-              >
-                Refresh Advice <TrendingUp className="w-3 h-3" />
-              </button>
+              <div className="pt-4 border-t border-white/10">
+                <button 
+                  onClick={fetchData}
+                  className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                >
+                  Refresh Analysis <Sparkles className="w-3 h-3" />
+                </button>
+              </div>
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-sm text-indigo-200 mb-4">Start tracking your expenses to get personalized financial advice.</p>
+              <p className="text-sm text-indigo-200 mb-6">Let AI analyze your habits to find hidden savings.</p>
               <button 
                 onClick={fetchData}
-                className="px-6 py-3 bg-indigo-600 rounded-2xl text-xs font-bold hover:bg-indigo-500 transition-colors"
+                className="w-full py-4 bg-indigo-600 rounded-2xl text-sm font-bold hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/20"
               >
-                Get Initial Advice
+                Start Analysis
               </button>
             </div>
           )}
         </div>
 
         {/* Decorative background elements */}
-        <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-600/20 rounded-full blur-3xl" />
-        <div className="absolute -left-10 -top-10 w-40 h-40 bg-purple-600/10 rounded-full blur-3xl" />
+        <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-indigo-600/20 rounded-full blur-[80px]" />
+        <div className="absolute -left-10 -top-10 w-64 h-64 bg-purple-600/10 rounded-full blur-[80px]" />
       </div>
 
-      {/* Tip of the day */}
-      <div className="bg-indigo-50 border border-indigo-100 rounded-3xl p-6">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-600 mb-2">Pro Tip</h4>
-        <p className="text-sm text-indigo-900 leading-relaxed">
-          The 50/30/20 rule suggests spending 50% on needs, 30% on wants, and 20% on savings. Check your category breakdown to see how you compare!
+      {/* Savings Focus Tip */}
+      <div className="bg-green-50 border border-green-100 rounded-[32px] p-8">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+            <Target className="w-5 h-5 text-green-600" />
+          </div>
+          <h4 className="text-sm font-bold text-green-900">Savings Strategy</h4>
+        </div>
+        <p className="text-sm text-green-800 leading-relaxed font-medium">
+          To reach your goals faster, aim to keep "Lifestyle" spending (Eating Out, Movies, Misc) below 15% of your total income. Every rupee saved today is a step closer to your Ladakh trip!
         </p>
       </div>
     </div>
