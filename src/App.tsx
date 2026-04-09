@@ -43,6 +43,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'expenses' | 'goals' | 'bills' | 'insights' | 'settings'>('dashboard');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
@@ -76,10 +77,15 @@ export default function App() {
   useEffect(() => {
     const checkRedirect = async () => {
       setIsLoggingIn(true);
+      setAuthError(null);
       try {
-        await handleRedirectResult();
-      } catch (error) {
+        const result = await handleRedirectResult();
+        if (result) {
+          console.log("Redirect success:", result.user.email);
+        }
+      } catch (error: any) {
         console.error("Redirect error:", error);
+        setAuthError(error.message || "An error occurred during sign in.");
       } finally {
         setIsLoggingIn(false);
       }
@@ -274,6 +280,17 @@ export default function App() {
         </div>
         <h1 className="text-3xl font-black tracking-tight mb-2">SpendWise</h1>
         <p className="text-gray-500 mb-8 max-w-xs">Your smart AI-powered financial companion. Sign in to start tracking your budget.</p>
+        
+        {authError && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3 text-left max-w-xs">
+            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-red-800">Sign in failed</p>
+              <p className="text-xs text-red-600 mt-1">{authError}</p>
+            </div>
+          </div>
+        )}
+
         <button 
           onClick={loginWithGoogle}
           className="flex items-center gap-3 px-8 py-4 bg-white border border-gray-200 rounded-2xl font-bold shadow-sm hover:bg-gray-50 transition-all active:scale-95"
