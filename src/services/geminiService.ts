@@ -1,10 +1,22 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Category, Expense, Income, Budget } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiInstance: GoogleGenAI | null = null;
+
+function getAI() {
+  if (!aiInstance) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
+      throw new Error("GEMINI_API_KEY is not set. Please add it to your .env file.");
+    }
+    aiInstance = new GoogleGenAI({ apiKey });
+  }
+  return aiInstance;
+}
 
 export async function categorizeExpense(description: string, availableCategories: string[]): Promise<Category> {
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Categorize this expense description into one of these categories: ${availableCategories.join(', ')}. 
@@ -48,6 +60,7 @@ export async function getFinancialAdvice(expenses: Expense[], income: Income[], 
     
     Format your response as a single paragraph with clear bullet points using emojis. Keep it encouraging but realistic.`;
 
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: prompt,

@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
+    "dev": "vite",
+    "host": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
@@ -17,7 +18,6 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
-    "express": "^4.21.2",
     "firebase": "^12.11.0",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
@@ -28,11 +28,9 @@
     "vite": "^6.2.0"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
     "autoprefixer": "^10.4.21",
     "tailwindcss": "^4.1.14",
-    "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }
