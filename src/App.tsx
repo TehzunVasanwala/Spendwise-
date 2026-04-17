@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  LayoutDashboard, 
-  ReceiptText, 
+  LayoutGrid,
+  History, 
   Target, 
   Plus, 
   Settings, 
@@ -364,7 +364,20 @@ export default function App() {
     try {
       const goal = goals.find(g => g.id === id);
       if (goal) {
+        // Update the goal's current amount
         await updateDoc(doc(db, 'goals', id), { currentAmount: goal.currentAmount + amount });
+        
+        // Deduction from account balance: Create an expense transaction for the contribution
+        if (amount > 0) {
+          const newExpense = {
+            amount: amount,
+            description: `Contribution: ${goal.name}`,
+            category: 'Savings / Buffer',
+            date: new Date().toISOString(),
+            userId: user.uid
+          };
+          await addDoc(collection(db, 'expenses'), newExpense);
+        }
       }
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `goals/${id}`);
@@ -379,6 +392,19 @@ export default function App() {
         userId: user.uid
       };
       await addDoc(collection(db, 'goals'), newGoal);
+      
+      // If there's an initial amount, record it as an expense to deduct from balance
+      if (data.currentAmount > 0) {
+        const newExpense = {
+          amount: data.currentAmount,
+          description: `Initial: ${data.name}`,
+          category: 'Savings / Buffer',
+          date: new Date().toISOString(),
+          userId: user.uid
+        };
+        await addDoc(collection(db, 'expenses'), newExpense);
+      }
+      
       setIsAddGoalModalOpen(false);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'goals');
@@ -441,38 +467,69 @@ export default function App() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F5F5F5] p-6 text-center">
-        <div className="w-20 h-20 bg-black rounded-[24px] flex items-center justify-center mb-8 shadow-2xl">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6 text-center">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-24 h-24 bg-brand-black rounded-4xl flex items-center justify-center mb-10 shadow-[0_20px_50px_rgba(0,0,0,0.15)]"
+        >
           <Wallet className="w-10 h-10 text-white" />
-        </div>
-        <h1 className="text-3xl font-black tracking-tight mb-2">SpendWise</h1>
-        <p className="text-gray-500 mb-8 max-w-xs">Your smart AI-powered financial companion. Sign in to start tracking your budget.</p>
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <h1 className="text-4xl font-display font-bold tracking-tight mb-3">SpendWise</h1>
+          <p className="text-brand-gray-muted mb-10 max-w-[280px] mx-auto leading-relaxed">
+            Your intelligence-first financial companion. Sign in to master your money.
+          </p>
+        </motion.div>
         
         {authError && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3 text-left max-w-xs">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 p-4 bg-red-50/50 border border-red-100 rounded-3xl flex items-start gap-3 text-left max-w-xs"
+          >
             <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-bold text-red-800">Sign in failed</p>
-              <p className="text-xs text-red-600 mt-1">{authError}</p>
+              <p className="text-sm font-semibold text-red-800">Authentication Error</p>
+              <p className="text-xs text-red-600/80 mt-1">{authError}</p>
             </div>
-          </div>
+          </motion.div>
         )}
 
-        <button 
+        <motion.button 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
           onClick={handleLogin}
-          className="flex items-center gap-3 px-8 py-4 bg-white border border-gray-200 rounded-2xl font-bold shadow-sm hover:bg-gray-50 transition-all active:scale-95"
+          disabled={isLoggingIn}
+          className="btn-primary w-full max-w-[280px]"
         >
-          <LogIn className="w-5 h-5" />
-          Sign in with Google
-        </button>
+          {isLoggingIn ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <>
+              <LogIn className="w-5 h-5" />
+              Sign in with Google
+            </>
+          )}
+        </motion.button>
+        
+        <p className="mt-8 text-[11px] font-semibold text-brand-gray-muted uppercase tracking-[0.1em]">
+          Powered by Gemini 3 Flash
+        </p>
       </div>
     );
   }
 
   return (
     <div className={cn(
-      "min-h-screen font-sans selection:bg-indigo-100 selection:text-indigo-900 overflow-x-hidden transition-colors duration-500",
-      isQuickAddOpen ? "bg-black" : "bg-[#F5F5F5]"
+      "min-h-screen font-sans selection:bg-brand-accent/10 selection:text-brand-accent overflow-x-hidden transition-colors duration-500",
+      isQuickAddOpen ? "bg-black" : "bg-brand-gray-light"
     )}>
       {isQuickAddOpen ? (
         <div className="fixed inset-0 bg-black z-[100]">
@@ -489,212 +546,206 @@ export default function App() {
       ) : (
         <>
           {/* Header */}
-          <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4 text-[#1A1A1A]">
-          <div className="max-w-md mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                <Wallet className="w-5 h-5 text-white" />
+          <header className="sticky top-0 z-30 bg-brand-gray-light/80 backdrop-blur-xl border-b border-gray-200/50 px-6 py-5 text-brand-black">
+            <div className="max-w-md mx-auto flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <motion.div 
+                  whileHover={{ rotate: 10 }}
+                  className="w-9 h-9 bg-brand-black rounded-xl flex items-center justify-center shadow-lg"
+                >
+                  <Wallet className="w-5 h-5 text-white" />
+                </motion.div>
+                <h1 className="text-xl font-display font-bold tracking-tight">SpendWise</h1>
               </div>
-              <h1 className="text-xl font-semibold tracking-tight">SpendWise</h1>
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={() => setActiveTab('settings')}
+                  className={cn(
+                    "p-3 rounded-2xl transition-all duration-300",
+                    activeTab === 'settings' ? "bg-brand-black text-white shadow-lg" : "text-brand-gray-muted hover:bg-brand-gray-light hover:text-brand-black"
+                  )}
+                  aria-label="Settings"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+                <button className="btn-ghost relative">
+                  <Bell className="w-5 h-5" />
+                  {bills.some(b => !b.isPaid) && (
+                    <span className="absolute top-2 right-2 w-2 h-2 bg-brand-accent rounded-full border-2 border-brand-gray-light" />
+                  )}
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors relative">
-                <Bell className="w-5 h-5 text-gray-500" />
-                {bills.some(b => !b.isPaid) && (
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
-                )}
-              </button>
-              <button 
-                onClick={logout}
-                className="p-2 hover:bg-red-50 rounded-full transition-colors text-gray-500 hover:text-red-500"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
+          </header>
+
+          {/* Main Content */}
+          <main className="max-w-md mx-auto px-6 py-4">
+            <AnimatePresence mode="wait">
+              {activeTab === 'dashboard' && (
+                <motion.div
+                  key="dashboard"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Dashboard 
+                    expenses={expenses} 
+                    income={income} 
+                    budget={budget} 
+                    goals={goals} 
+                    bills={bills}
+                    presets={presets}
+                    onQuickAdd={addFromPreset}
+                    onToggleBill={toggleBillPaid}
+                    onManageBills={() => setActiveTab('bills')}
+                    showInstallBtn={showInstallBtn}
+                    onInstall={handleInstall}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'expenses' && (
+                <motion.div
+                  key="expenses"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ExpenseList expenses={expenses} onDelete={deleteExpense} />
+                </motion.div>
+              )}
+
+              {activeTab === 'goals' && (
+                <motion.div
+                  key="goals"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <SavingsGoals 
+                    goals={goals} 
+                    onUpdate={updateGoal} 
+                    onDelete={deleteGoal}
+                    onAddClick={() => setIsAddGoalModalOpen(true)}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'bills' && (
+                <motion.div
+                  key="bills"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Bills bills={bills} userId={user.uid} categories={Object.keys(budget.categories)} />
+                </motion.div>
+              )}
+
+              {activeTab === 'insights' && (
+                <motion.div
+                  key="insights"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Insights expenses={expenses} income={income} budget={budget} userStats={userStats} />
+                </motion.div>
+              )}
+
+              {activeTab === 'settings' && (
+                <motion.div
+                  key="settings"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <BudgetSettings 
+                    budget={budget} 
+                    onUpdate={updateBudget} 
+                    showInstallBtn={showInstallBtn}
+                    onInstall={handleInstall}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </main>
+
+          <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[92%] max-w-lg z-50">
+            <div className="nav-blur rounded-[40px] px-3 py-3 flex items-center justify-between shadow-[0_20px_80px_rgba(0,0,0,0.15)] relative">
+              <NavButton 
+                active={activeTab === 'dashboard'} 
+                onClick={() => setActiveTab('dashboard')}
+                icon={<LayoutGrid className="w-5 h-5" />}
+                label="Home"
+              />
+              <NavButton 
+                active={activeTab === 'expenses'} 
+                onClick={() => setActiveTab('expenses')}
+                icon={<History className="w-5 h-5" />}
+                label="Logs"
+              />
+              
+              {/* Central Action Button */}
+              <div className="relative -top-3">
+                <button 
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="w-16 h-16 bg-brand-black text-white rounded-[24px] shadow-[0_20px_40px_rgba(0,0,0,0.3)] flex items-center justify-center active:scale-90 transition-all hover:scale-105 border-4 border-white"
+                  aria-label="Add Transaction"
+                >
+                  <Plus className="w-8 h-8" />
+                </button>
+              </div>
+
+              <NavButton 
+                active={activeTab === 'insights'} 
+                onClick={() => setActiveTab('insights')}
+                icon={<BrainCircuit className="w-5 h-5" />}
+                label="Coach"
+              />
+              <NavButton 
+                active={activeTab === 'goals'} 
+                onClick={() => setActiveTab('goals')}
+                icon={<Target className="w-5 h-5" />}
+                label="Goals"
+              />
             </div>
-          </div>
-        </header>
+          </nav>
 
-      {/* Main Content */}
-      <main className="max-w-md mx-auto px-6 pt-6">
-        <AnimatePresence mode="wait">
-          {activeTab === 'dashboard' && (
-            <motion.div
-              key="dashboard"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Dashboard 
-                expenses={expenses} 
-                income={income} 
-                budget={budget} 
-                goals={goals} 
-                bills={bills}
-                presets={presets}
-                onQuickAdd={addFromPreset}
-                onToggleBill={toggleBillPaid}
-                onManageBills={() => setActiveTab('bills')}
-                showInstallBtn={showInstallBtn}
-                onInstall={handleInstall}
-              />
-            </motion.div>
-          )}
-
-          {activeTab === 'expenses' && (
-            <motion.div
-              key="expenses"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ExpenseList expenses={expenses} onDelete={deleteExpense} />
-            </motion.div>
-          )}
-
-          {activeTab === 'goals' && (
-            <motion.div
-              key="goals"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <SavingsGoals 
-                goals={goals} 
-                onUpdate={updateGoal} 
-                onDelete={deleteGoal}
-                onAddClick={() => setIsAddGoalModalOpen(true)}
-              />
-            </motion.div>
-          )}
-
-          {activeTab === 'bills' && (
-            <motion.div
-              key="bills"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Bills bills={bills} userId={user.uid} categories={Object.keys(budget.categories)} />
-            </motion.div>
-          )}
-
-          {activeTab === 'insights' && (
-            <motion.div
-              key="insights"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Insights expenses={expenses} income={income} budget={budget} userStats={userStats} />
-            </motion.div>
-          )}
-
-          {activeTab === 'settings' && (
-            <motion.div
-              key="settings"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <BudgetSettings 
-                budget={budget} 
-                onUpdate={updateBudget} 
-                showInstallBtn={showInstallBtn}
-                onInstall={handleInstall}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
-
-      {/* Floating Action Button - Hidden in Quick Add */}
-      {!isQuickAddOpen && (
-        <button 
-          onClick={() => setIsAddModalOpen(true)}
-          className="fixed bottom-28 right-6 w-14 h-14 bg-black text-white rounded-2xl shadow-2xl flex items-center justify-center active:scale-90 transition-transform z-40"
-        >
-          <Plus className="w-6 h-6" />
-        </button>
-      )}
-
-      {/* Navigation - Hidden in Quick Add */}
-      {!isQuickAddOpen && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-gray-200 px-6 py-4 z-40">
-          <div className="max-w-md mx-auto flex items-center justify-between">
-            <NavButton 
-              active={activeTab === 'dashboard'} 
-              onClick={() => setActiveTab('dashboard')}
-              icon={<LayoutDashboard className="w-6 h-6" />}
-              label="Home"
-            />
-            <NavButton 
-              active={activeTab === 'expenses'} 
-              onClick={() => setActiveTab('expenses')}
-              icon={<ReceiptText className="w-6 h-6" />}
-              label="History"
-            />
-            <NavButton 
-              active={activeTab === 'bills'} 
-              onClick={() => setActiveTab('bills')}
-              icon={<CalendarIcon className="w-6 h-6" />}
-              label="Bills"
-            />
-            <NavButton 
-              active={activeTab === 'insights'} 
-              onClick={() => setActiveTab('insights')}
-              icon={<BrainCircuit className="w-6 h-6" />}
-              label="Coach"
-            />
-            <NavButton 
-              active={activeTab === 'goals'} 
-              onClick={() => setActiveTab('goals')}
-              icon={<Target className="w-6 h-6" />}
-              label="Goals"
-            />
-            <NavButton 
-              active={activeTab === 'settings'} 
-              onClick={() => setActiveTab('settings')}
-              icon={<Settings className="w-6 h-6" />}
-              label="Settings"
-            />
-          </div>
-        </nav>
-      )}
-
-      {/* Add Transaction Modal */}
-      <AnimatePresence>
-        {(isAddModalOpen && !isQuickAddOpen) && (
-          <AddTransaction 
-            onClose={() => setIsAddModalOpen(false)} 
-            onAdd={addTransaction} 
-            categories={Object.keys(budget.categories)}
+          <FinancialChat 
+            expenses={expenses}
+            income={income}
+            budget={budget}
           />
-        )}
-      </AnimatePresence>
 
-      {/* Add Goal Modal */}
-      <AnimatePresence>
-        {isAddGoalModalOpen && (
-          <AddGoal 
-            onClose={() => setIsAddGoalModalOpen(false)} 
-            onAdd={addGoal} 
-          />
-        )}
-      </AnimatePresence>
+          {/* Add Transaction Modal */}
+          <AnimatePresence>
+            {isAddModalOpen && (
+              <AddTransaction 
+                onClose={() => setIsAddModalOpen(false)} 
+                onAdd={addTransaction} 
+                categories={Object.keys(budget.categories)}
+              />
+            )}
+          </AnimatePresence>
 
-      <FinancialChat 
-        expenses={expenses}
-        income={income}
-        budget={budget}
-      />
-    </>
-  )}
+          {/* Add Goal Modal */}
+          <AnimatePresence>
+            {isAddGoalModalOpen && (
+              <AddGoal 
+                onClose={() => setIsAddGoalModalOpen(false)} 
+                onAdd={addGoal} 
+              />
+            )}
+          </AnimatePresence>
+        </>
+      )}
     </div>
   );
 }
@@ -704,16 +755,27 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
     <button 
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center gap-1 transition-colors",
-        active ? "text-black" : "text-gray-400"
+        "flex flex-col items-center gap-1.5 transition-all duration-300 relative px-3 py-1",
+        active ? "text-brand-black" : "text-brand-gray-muted"
       )}
     >
-      {icon}
-      <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
+      <div className={cn(
+        "transition-transform duration-300",
+        active ? "scale-110" : "scale-100"
+      )}>
+        {icon}
+      </div>
+      <span className={cn(
+        "text-[10px] font-bold uppercase tracking-[0.1em] transition-opacity duration-300",
+        active ? "opacity-100" : "opacity-60"
+      )}>
+        {label}
+      </span>
       {active && (
         <motion.div 
           layoutId="nav-indicator"
-          className="w-1 h-1 bg-black rounded-full mt-0.5"
+          className="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-1 bg-brand-black rounded-full"
+          transition={{ type: "spring", stiffness: 400, damping: 30 }}
         />
       )}
     </button>

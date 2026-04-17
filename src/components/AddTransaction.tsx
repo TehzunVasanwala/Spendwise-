@@ -58,7 +58,7 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
 
   if (isIslandMode) {
     return (
-      <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex flex-col items-center justify-start pt-4 sm:pt-12 overflow-hidden">
+      <div className="fixed inset-0 z-[100] bg-brand-black/20 backdrop-blur-2xl flex flex-col items-center justify-start pt-4 sm:pt-12 overflow-hidden">
         <motion.div 
           layoutId="dynamic-island"
           initial={{ width: 120, height: 36, borderRadius: 100, y: 0 }}
@@ -70,21 +70,21 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
           } : { 
             width: '92%', 
             maxWidth: 400,
-            height: step === 1 ? 320 : 580, 
+            height: step === 1 ? 340 : 600, 
             borderRadius: 48,
             y: 12
           }}
           transition={{ 
             type: "spring", 
-            stiffness: 300, 
+            stiffness: 400, 
             damping: 30,
             layout: { duration: 0.3 }
           }}
-          className="bg-black shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-white/5 relative flex flex-col items-center p-8"
+          className="bg-brand-black shadow-[0_40px_100px_rgba(0,0,0,0.6)] border border-white/10 relative flex flex-col items-center p-10"
         >
           <button 
             onClick={onClose}
-            className="absolute top-6 right-6 p-2 text-white/30 hover:text-white transition-colors"
+            className="absolute top-8 right-8 p-2 text-white/20 hover:text-white transition-all transform hover:rotate-90"
           >
             <X className="w-6 h-6" />
           </button>
@@ -92,66 +92,69 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
           <div className="w-full h-full flex flex-col justify-between">
             <motion.div 
               key={step}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
               className="flex-1"
             >
               {step === 1 ? (
-                <div className="space-y-6 text-center mt-4">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
-                    <h2 className="text-white/40 text-[10px] font-bold uppercase tracking-[0.3em]">Quick Entry</h2>
+                <div className="space-y-10 text-center mt-6">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse" />
+                    <h2 className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.4em]">Engine Active</h2>
                   </div>
                   
-                  <div className="flex p-1 bg-white/5 rounded-2xl mb-4 max-w-[200px] mx-auto">
+                  <div className="flex p-1.5 bg-white/5 rounded-2xl mb-8 max-w-[220px] mx-auto border border-white/5">
                     <button 
                       onClick={() => setType('expense')}
                       className={cn(
-                        "flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
-                        type === 'expense' ? "bg-white text-black" : "text-white/40"
+                        "flex-1 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                        type === 'expense' ? "bg-white text-brand-black shadow-xl" : "text-white/20 hover:text-white/40"
                       )}
                     >
-                      Expense
+                      Outflow
                     </button>
                     <button 
                       onClick={() => setType('income')}
                       className={cn(
-                        "flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
-                        type === 'income' ? "bg-white text-black" : "text-white/40"
+                        "flex-1 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                        type === 'income' ? "bg-white text-brand-black shadow-xl" : "text-white/20 hover:text-white/40"
                       )}
                     >
-                      Income
+                      Inflow
                     </button>
                   </div>
 
-                  <div className="relative">
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 text-white/20 text-3xl font-black">₹</span>
+                  <div className="relative group">
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 text-white/10 text-4xl font-display font-bold transition-colors group-focus-within:text-brand-accent">₹</span>
                     <input 
                       autoFocus
                       type="number" 
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      placeholder="0"
-                      className="w-full bg-transparent border-none text-white text-6xl font-black focus:ring-0 text-center placeholder:text-white/5"
+                      placeholder="0.00"
+                      className="w-full bg-transparent border-none text-white text-7xl font-display font-bold focus:ring-0 text-center placeholder:text-white/5 tracking-tighter"
                     />
                   </div>
                 </div>
               ) : (
-                <div className="space-y-8 mt-4">
+                <div className="space-y-10 mt-6 px-1">
                   {type === 'expense' && (
                     <div className="space-y-4">
-                      <h2 className="text-white/40 text-[10px] font-bold uppercase tracking-[0.3em]">Category</h2>
-                      <div className="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-white/30 text-[10px] font-bold uppercase tracking-[0.3em]">Classification</h2>
+                        <span className="text-brand-accent text-[8px] font-black uppercase tracking-widest px-2 py-0.5 bg-brand-accent/10 rounded-full">Required</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 max-h-[260px] overflow-y-auto pr-2 custom-scrollbar-dark">
                         {categories.map((cat) => (
                           <button
                             key={cat}
                             onClick={() => setCategory(cat as Category)}
                             className={cn(
-                              "py-3 px-4 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border",
+                              "py-4 px-5 rounded-[20px] text-[10px] font-bold uppercase tracking-widest transition-all border outline-none",
                               category === cat 
-                                ? "bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.1)]" 
-                                : "bg-white/5 text-white/40 border-white/5 hover:bg-white/10"
+                                ? "bg-white text-brand-black border-white shadow-[0_0_30px_rgba(255,255,255,0.15)] scale-[1.02]" 
+                                : "bg-white/5 text-white/30 border-white/5 hover:bg-white/10 hover:border-white/20"
                             )}
                           >
                             {cat}
@@ -162,24 +165,24 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
                   )}
 
                   <div className="space-y-4">
-                    <h2 className="text-white/40 text-[10px] font-bold uppercase tracking-[0.3em]">
-                      {type === 'expense' ? 'Note' : 'Source'}
+                    <h2 className="text-white/30 text-[10px] font-bold uppercase tracking-[0.3em]">
+                      {type === 'expense' ? 'Designation' : 'Provenance'}
                     </h2>
                     <div className="relative">
                       <input 
                         type="text" 
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        placeholder={type === 'expense' ? "What was this for?" : "Who sent this?"}
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-sm font-bold focus:ring-1 focus:ring-white transition-all outline-none"
+                        placeholder={type === 'expense' ? "e.g., Cloud Infrastructure" : "e.g., Quarterly Dividend"}
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 px-6 text-white text-sm font-semibold focus:ring-2 focus:ring-brand-accent/50 transition-all outline-none placeholder:text-white/10"
                       />
                       {type === 'expense' && (
                         <button 
                           onClick={handleAutoCategorize}
                           disabled={isCategorizing || !description}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-white/40 hover:text-white transition-colors"
+                          className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-all disabled:opacity-10"
                         >
-                          {isCategorizing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                          {isCategorizing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5 shadow-glow" />}
                         </button>
                       )}
                     </div>
@@ -191,20 +194,20 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
             <button 
               onClick={handleNext}
               disabled={step === 1 && !amount}
-              className="w-full py-5 bg-white text-black rounded-[24px] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-10 mt-6"
+              className="w-full py-6 bg-white text-brand-black rounded-[28px] font-bold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-10 mt-10 shadow-2xl"
             >
               {step === 1 ? (
-                <>Next <ArrowRight className="w-5 h-5" /></>
+                <>Manifest <ArrowRight className="w-4 h-4" /></>
               ) : (
-                <>Save <Check className="w-5 h-5" /></>
+                <>Commit Ledger <Check className="w-4 h-4" /></>
               )}
             </button>
           </div>
         </motion.div>
 
-        <div className="mt-8 flex gap-1.5">
-          <div className={cn("w-1.5 h-1.5 rounded-full transition-all duration-300", step === 1 ? "bg-white w-4" : "bg-white/20")} />
-          <div className={cn("w-1.5 h-1.5 rounded-full transition-all duration-300", step === 2 ? "bg-white w-4" : "bg-white/20")} />
+        <div className="mt-12 flex gap-2">
+          <div className={cn("h-1.5 rounded-full transition-all duration-500", step === 1 ? "bg-white w-8" : "bg-white/20 w-1.5")} />
+          <div className={cn("h-1.5 rounded-full transition-all duration-500", step === 2 ? "bg-white w-8" : "bg-white/20 w-1.5")} />
         </div>
       </div>
     );
@@ -217,31 +220,31 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-brand-black/20 backdrop-blur-md"
       />
       
       <motion.div 
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="relative w-full max-w-md bg-white rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden"
+        initial={{ y: '100%', opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: '100%', opacity: 0 }}
+        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        className="relative w-full max-w-md bg-white rounded-t-4xl sm:rounded-4xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden"
       >
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold tracking-tight">Add Transaction</h2>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+        <div className="p-8">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-display font-bold tracking-tight text-brand-black">Ledger</h2>
+            <button onClick={onClose} className="btn-ghost">
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Type Toggle */}
-          <div className="flex p-1 bg-gray-100 rounded-2xl mb-8">
+          <div className="flex p-1 bg-brand-gray-light rounded-2xl mb-10">
             <button 
               onClick={() => setType('expense')}
               className={cn(
-                "flex-1 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2",
-                type === 'expense' ? "bg-white text-black shadow-sm" : "text-gray-500"
+                "flex-1 py-3 rounded-xl text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2",
+                type === 'expense' ? "bg-white text-brand-black shadow-[0_4px_12px_rgba(0,0,0,0.05)]" : "text-brand-gray-muted hover:text-brand-black"
               )}
             >
               <TrendingDown className="w-4 h-4" />
@@ -250,8 +253,8 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
             <button 
               onClick={() => setType('income')}
               className={cn(
-                "flex-1 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2",
-                type === 'income' ? "bg-white text-black shadow-sm" : "text-gray-500"
+                "flex-1 py-3 rounded-xl text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2",
+                type === 'income' ? "bg-white text-brand-black shadow-[0_4px_12px_rgba(0,0,0,0.05)]" : "text-brand-gray-muted hover:text-brand-black"
               )}
             >
               <TrendingUp className="w-4 h-4" />
@@ -259,33 +262,34 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-1">Amount</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-400">₹</span>
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gray-muted px-1">Amount</label>
+              <div className="relative group">
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 text-3xl font-display font-bold text-brand-gray-muted transition-colors group-focus-within:text-brand-black">₹</span>
                 <input 
                   type="number" 
                   step="0.01"
+                  autoFocus
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-10 pr-4 text-2xl font-bold focus:ring-2 focus:ring-black transition-all"
+                  className="w-full bg-transparent border-b-2 border-brand-gray-light py-5 pl-10 pr-4 text-4xl font-display font-bold focus:border-brand-black transition-all outline-none placeholder:text-brand-gray-light"
                   required
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-1">Description</label>
-              <div className="relative">
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gray-muted px-1">Description</label>
+              <div className="relative group">
                 <input 
                   type="text" 
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   onBlur={handleAutoCategorize}
-                  placeholder={type === 'expense' ? "What did you buy?" : "Where is this from?"}
-                  className="w-full bg-gray-50 border-none rounded-2xl py-4 px-4 text-sm font-medium focus:ring-2 focus:ring-black transition-all pr-12"
+                  placeholder={type === 'expense' ? "Purchase details..." : "Revenue source..."}
+                  className="w-full bg-brand-gray-light border-none rounded-2xl py-4 px-5 text-sm font-semibold focus:ring-2 focus:ring-brand-black transition-all pr-12 placeholder:text-brand-gray-muted/50"
                   required
                 />
                 {type === 'expense' && (
@@ -293,7 +297,7 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
                     type="button"
                     onClick={handleAutoCategorize}
                     disabled={isCategorizing || !description}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors disabled:opacity-50"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-all disabled:opacity-30"
                   >
                     {isCategorizing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
                   </button>
@@ -302,19 +306,19 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
             </div>
 
             {type === 'expense' && (
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-1">Category</label>
-                <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gray-muted px-1">Category</label>
+                <div className="grid grid-cols-2 gap-3 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
                   {categories.map((cat) => (
                     <button
                       key={cat}
                       type="button"
-                      onClick={() => setCategory(cat)}
+                      onClick={() => setCategory(cat as Category)}
                       className={cn(
-                        "py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border",
+                        "py-3 px-4 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border",
                         category === cat 
-                          ? "bg-black text-white border-black" 
-                          : "bg-white text-gray-500 border-gray-100 hover:border-gray-300"
+                          ? "bg-brand-black text-white border-brand-black shadow-lg" 
+                          : "bg-white text-brand-gray-muted border-brand-gray-light hover:border-brand-gray-muted"
                       )}
                     >
                       {cat}
@@ -326,9 +330,9 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
 
             <button 
               type="submit"
-              className="w-full py-4 bg-black text-white rounded-2xl font-bold text-sm shadow-lg shadow-black/10 active:scale-[0.98] transition-all mt-4"
+              className="btn-primary w-full mt-4"
             >
-              Save {type === 'expense' ? 'Expense' : 'Income'}
+              Archive Entry
             </button>
           </form>
         </div>

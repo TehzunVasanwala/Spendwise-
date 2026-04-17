@@ -1,1 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-brand-black: #000000;
+  --color-brand-accent: #007AFF;
+  --color-brand-gray-light: #F2F2F7;
+  --color-brand-gray-muted: #8E8E93;
+  
+  --radius-4xl: 40px;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-brand-black antialiased font-sans overflow-x-hidden;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-brand-gray-light rounded-full;
+  }
+  .custom-scrollbar-dark::-webkit-scrollbar-thumb {
+    @apply bg-white/10 rounded-full;
+  }
+}
+
+@layer components {
+  .neo-card {
+    @apply bg-white border border-brand-gray-light shadow-[0_10px_50px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_60px_rgba(0,0,0,0.06)] transition-all duration-500 bg-clip-padding;
+  }
+  
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-2xl border border-white/20 shadow-xl;
+  }
+
+  .btn-primary {
+    @apply px-10 py-5 bg-brand-black text-white rounded-[28px] font-bold text-xs uppercase tracking-[0.2em] shadow-[0_20px_40px_rgba(0,0,0,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all;
+  }
+
+  .btn-secondary {
+    @apply px-10 py-5 bg-brand-gray-light text-brand-black rounded-[28px] font-bold text-xs uppercase tracking-[0.2em] hover:bg-brand-black hover:text-white transition-all;
+  }
+
+  .btn-ghost {
+    @apply p-3 text-brand-gray-muted hover:text-brand-black hover:bg-brand-gray-light rounded-2xl transition-all;
+  }
+
+  .nav-blur {
+    @apply bg-white/80 backdrop-blur-2xl border-t border-brand-gray-light/50;
+  }
+
+  .shadow-glow {
+    @apply drop-shadow-[0_0_8px_rgba(0,122,255,0.4)];
+  }
+}

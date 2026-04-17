@@ -32,92 +32,95 @@ export default function AddGoal({ onClose, onAdd }: AddGoalProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-brand-black/20 backdrop-blur-md"
       />
       
       <motion.div 
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="relative w-full max-w-md bg-white rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden"
+        initial={{ y: '100%', opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: '100%', opacity: 0 }}
+        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        className="relative w-full max-w-md bg-white rounded-t-4xl sm:rounded-4xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden"
       >
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold tracking-tight">New Savings Goal</h2>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+        <div className="p-8">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-display font-bold tracking-tight text-brand-black">Commitment</h2>
+            <button onClick={onClose} className="btn-ghost">
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-1">Goal Name</label>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gray-muted px-1">Objective Name</label>
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-gray-muted transition-colors group-focus-within:text-brand-black">
                   <Target className="w-5 h-5" />
                 </div>
                 <input 
                   type="text" 
                   value={name}
+                  autoFocus
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., New Laptop, Trip to Goa"
-                  className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-4 text-sm font-medium focus:ring-2 focus:ring-black transition-all"
+                  placeholder="e.g., Portfolio expansion"
+                  className="w-full bg-brand-gray-light border-none rounded-2xl py-4.5 pl-12 pr-4 text-sm font-semibold focus:ring-2 focus:ring-brand-black transition-all outline-none placeholder:text-brand-gray-muted/50"
                   required
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-1">Target Amount</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-400">₹</span>
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gray-muted px-1">Target Capital</label>
+              <div className="relative group">
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 text-3xl font-display font-bold text-brand-gray-muted transition-colors group-focus-within:text-brand-black">₹</span>
                 <input 
                   type="number" 
                   value={targetAmount}
                   onChange={(e) => setTargetAmount(e.target.value)}
-                  placeholder="0"
-                  className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-10 pr-4 text-2xl font-bold focus:ring-2 focus:ring-black transition-all"
+                  placeholder="0.00"
+                  className="w-full bg-transparent border-b-2 border-brand-gray-light py-5 pl-10 pr-4 text-4xl font-display font-bold focus:border-brand-black transition-all outline-none placeholder:text-brand-gray-light"
                   required
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-1">Already Saved (Optional)</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-gray-400">₹</span>
-                <input 
-                  type="number" 
-                  value={currentAmount}
-                  onChange={(e) => setCurrentAmount(e.target.value)}
-                  placeholder="0"
-                  className="w-full bg-gray-50 border-none rounded-2xl py-3 pl-10 pr-4 text-lg font-bold focus:ring-2 focus:ring-black transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-1">Deadline</label>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                  <Calendar className="w-5 h-5" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gray-muted px-1">Initial</label>
+                <div className="relative group">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-gray-muted font-bold text-xs">₹</span>
+                  <input 
+                    type="number" 
+                    value={currentAmount}
+                    onChange={(e) => setCurrentAmount(e.target.value)}
+                    placeholder="0"
+                    className="w-full bg-brand-gray-light border-none rounded-2xl py-3.5 pl-7 pr-3 text-xs font-bold focus:ring-2 focus:ring-brand-black transition-all outline-none"
+                  />
                 </div>
-                <input 
-                  type="date" 
-                  value={deadline}
-                  onChange={(e) => setDeadline(e.target.value)}
-                  className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-4 text-sm font-medium focus:ring-2 focus:ring-black transition-all"
-                  required
-                />
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gray-muted px-1">Deadline</label>
+                <div className="relative group">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-gray-muted transition-colors group-focus-within:text-brand-black">
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                  <input 
+                    type="date" 
+                    value={deadline}
+                    onChange={(e) => setDeadline(e.target.value)}
+                    className="w-full bg-brand-gray-light border-none rounded-2xl py-3.5 pl-9 pr-3 text-xs font-bold focus:ring-2 focus:ring-brand-black transition-all outline-none"
+                    required
+                  />
+                </div>
               </div>
             </div>
 
             <button 
               type="submit"
-              className="w-full py-4 bg-black text-white rounded-2xl font-bold text-sm shadow-lg shadow-black/10 active:scale-[0.98] transition-all mt-4"
+              className="btn-primary w-full mt-4"
             >
-              Create Goal
+              Confirm Objective
             </button>
           </form>
         </div>

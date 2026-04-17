@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { motion } from 'motion/react';
 import { 
   PieChart, 
   Pie, 
@@ -6,10 +7,10 @@ import {
   ResponsiveContainer, 
   Tooltip 
 } from 'recharts';
-import { TrendingUp, AlertCircle, ArrowDownRight, Coffee, Calendar, CheckCircle2, Circle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TrendingUp, AlertCircle, ArrowDownRight, Coffee, Calendar, CheckCircle2, Circle, ChevronLeft, ChevronRight, ReceiptText } from 'lucide-react';
 import { Expense, Income, Budget, SavingsGoal, Category, Bill, QuickPreset } from '../types';
 import { cn } from '../lib/utils';
-import { format, differenceInDays, endOfMonth, startOfMonth, subMonths, addMonths, isSameMonth } from 'date-fns';
+import { format, differenceInDays, endOfMonth, startOfMonth, subMonths, addMonths, isSameMonth, isToday } from 'date-fns';
 
 interface DashboardProps {
   expenses: Expense[];
@@ -84,7 +85,7 @@ export default function Dashboard({
   // Daily Allowance Calculation
   const dailyAllowance = useMemo(() => {
     const now = new Date();
-    if (!isSameMonth(now, selectedDate)) return { amount: 0, isExceeded: false };
+    if (!isSameMonth(now, selectedDate)) return { amount: 0, isExceeded: false, todaySpent: 0 };
     
     const lastDay = endOfMonth(now);
     const daysLeft = differenceInDays(lastDay, now) + 1;
@@ -95,12 +96,16 @@ export default function Dashboard({
       .reduce((sum, b) => sum + b.amount, 0);
       
     const safeRemaining = remainingBudget - unpaidBillsTotal;
+    const todaySpent = filteredExpenses
+      .filter(e => isToday(new Date(e.date)))
+      .reduce((sum, e) => sum + e.amount, 0);
     
     return {
       amount: Math.max(0, safeRemaining / daysLeft),
-      isExceeded: safeRemaining <= 0
+      isExceeded: safeRemaining <= 0,
+      todaySpent
     };
-  }, [remainingBudget, selectedDate, bills]);
+  }, [remainingBudget, selectedDate, bills, filteredExpenses]);
 
   const categoryData = useMemo(() => {
     const data: Record<string, number> = {};
@@ -120,301 +125,352 @@ export default function Dashboard({
   };
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-8 pb-32">
       {/* PWA Install Banner */}
       {showInstallBtn && (
-        <div className="bg-indigo-600 text-white rounded-2xl p-4 flex items-center justify-between shadow-lg shadow-indigo-100 animate-in fade-in slide-in-from-top-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-indigo-200" />
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-brand-black text-white rounded-3xl p-5 flex items-center justify-between shadow-2xl relative overflow-hidden"
+        >
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
+              <TrendingUp className="w-6 h-6 text-brand-accent" />
             </div>
             <div>
-              <p className="text-xs font-bold">Install SpendWise</p>
-              <p className="text-[10px] text-indigo-100">Add to your home screen for full access</p>
+              <p className="text-sm font-bold">Install SpendWise</p>
+              <p className="text-xs text-brand-gray-muted">Get a native experience</p>
             </div>
           </div>
           <button 
             onClick={onInstall}
-            className="px-4 py-2 bg-white text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-colors"
+            className="px-5 py-2.5 bg-white text-brand-black rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-brand-gray-light transition-colors relative z-10"
           >
             Install
           </button>
-        </div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/20 rounded-full blur-3xl -mr-10 -mt-10" />
+        </motion.div>
       )}
 
       {/* Month Selector */}
-      <div className="flex items-center justify-between bg-white rounded-2xl p-2 shadow-sm border border-gray-100">
+      <div className="flex items-center justify-between neo-card rounded-3xl p-2">
         <button 
           onClick={handlePrevMonth}
-          className="p-2 hover:bg-gray-50 rounded-xl transition-colors"
+          className="p-3 text-brand-gray-muted hover:text-brand-black transition-colors rounded-2xl hover:bg-brand-gray-light"
         >
-          <ChevronLeft className="w-5 h-5 text-gray-400" />
+          <ChevronLeft className="w-5 h-5" />
         </button>
         <div className="flex flex-col items-center">
-          <span className="text-sm font-bold text-gray-900">{format(selectedDate, 'MMMM yyyy')}</span>
+          <span className="text-base font-display font-bold text-brand-black tracking-tight">{format(selectedDate, 'MMMM yyyy')}</span>
           {isSameMonth(new Date(), selectedDate) && (
-            <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Current Month</span>
+            <span className="text-[10px] font-bold text-brand-accent uppercase tracking-[0.2em] mt-0.5">Current</span>
           )}
         </div>
         <button 
           onClick={handleNextMonth}
-          className="p-2 hover:bg-gray-50 rounded-xl transition-colors"
+          className="p-3 text-brand-gray-muted hover:text-brand-black transition-colors rounded-2xl hover:bg-brand-gray-light"
         >
-          <ChevronRight className="w-5 h-5 text-gray-400" />
+          <ChevronRight className="w-5 h-5" />
         </button>
       </div>
 
       {/* Summary Card */}
-      <div className="bg-black text-white rounded-[40px] p-8 shadow-xl relative overflow-hidden">
+      <div className="bg-brand-black text-white rounded-4xl p-10 shadow-[0_40px_100px_rgba(0,0,0,0.15)] relative overflow-hidden group">
         <div className="relative z-10">
-          <div className="flex justify-between items-start mb-8">
+          <div className="flex justify-between items-start mb-12">
             <div>
-              <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">Net Cash Flow</p>
-              <h2 className="text-4xl font-black tracking-tight">₹{netFlow.toLocaleString('en-IN')}</h2>
+              <p className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.3em] mb-3 px-1">Disposable Velocity</p>
+              <h2 className="text-5xl font-display font-bold tracking-tighter leading-none break-all">₹{netFlow.toLocaleString('en-IN')}</h2>
             </div>
             <div className={cn(
-              "backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1",
-              isOverBudget ? "bg-red-500/20" : "bg-white/10"
+              "backdrop-blur-2xl px-5 py-2.5 rounded-2xl flex items-center gap-2 border shadow-lg transition-transform duration-500 hover:scale-105",
+              isOverBudget ? "bg-red-500/10 border-red-500/20" : "bg-white/5 border-white/10"
             )}>
               {isOverBudget ? (
                 <>
-                  <AlertCircle className="w-3 h-3 text-red-400" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-red-400">Overspending</span>
+                  <AlertCircle className="w-4 h-4 text-red-400" />
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-400">Leakage</span>
                 </>
               ) : (
                 <>
-                  <TrendingUp className="w-3 h-3 text-green-400" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Healthy</span>
+                  <CheckCircle2 className="w-4 h-4 text-brand-accent shadow-glow" />
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-accent">Optimized</span>
                 </>
               )}
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-2 gap-12 mb-12">
             <div>
-              <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-1">Income</p>
-              <p className="text-xl font-bold text-green-400">+₹{totalIncome.toLocaleString('en-IN')}</p>
+              <p className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.2em] mb-2 px-1">Total Inflow</p>
+              <p className="text-2xl font-display font-bold text-white tracking-tight">₹{totalIncome.toLocaleString('en-IN')}</p>
             </div>
             <div>
-              <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-1">Expenses</p>
-              <p className="text-xl font-bold text-red-400">-₹{totalSpent.toLocaleString('en-IN')}</p>
+              <p className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.2em] mb-2 px-1">Monthly Outflow</p>
+              <p className="text-2xl font-display font-bold text-brand-gray-muted tracking-tight">₹{totalSpent.toLocaleString('en-IN')}</p>
             </div>
           </div>
 
-          {effectiveIncome > 0 && (
-            <div className="mb-8 p-4 bg-white/5 rounded-2xl border border-white/10">
-              <div className="flex justify-between items-center mb-1">
-                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Savings Potential</p>
-                <p className="text-xs font-bold text-green-400">₹{(effectiveIncome - totalSpent).toLocaleString('en-IN')}</p>
+          <div className="space-y-5">
+            <div className="flex justify-between items-end px-1">
+              <div>
+                <p className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5">Efficiency Rating</p>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div 
+                      key={i} 
+                      className={cn(
+                        "w-4 h-1.5 rounded-full transition-all duration-700",
+                        i <= Math.ceil((100 - percentSpent) / 20) ? "bg-brand-accent shadow-glow" : "bg-white/5"
+                      )}
+                    />
+                  ))}
+                </div>
               </div>
-              <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-green-500 transition-all duration-1000"
-                  style={{ width: `${Math.max(0, Math.min(100, ((effectiveIncome - totalSpent) / effectiveIncome) * 100))}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-500">
-              <span>{isOverBudget ? 'Over Budget' : 'Budget Usage'}</span>
-              <span className={cn(isOverBudget && "text-red-400 font-black")}>
-                {isOverBudget ? `+₹${(totalSpent - effectiveLimit).toLocaleString('en-IN')}` : `${percentSpent.toFixed(0)}%`}
+              <span className="text-[10px] font-display font-bold text-brand-gray-muted uppercase tracking-widest">
+                {percentSpent.toFixed(0)}% Exhausted
               </span>
             </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-              <div 
+            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(percentSpent, 100)}%` }}
+                transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
                 className={cn(
-                  "h-full transition-all duration-1000",
-                  isOverBudget ? "bg-red-500" : percentSpent > 75 ? "bg-yellow-500" : "bg-white"
+                  "h-full rounded-full shadow-[0_0_20px_rgba(255,255,255,0.1)]",
+                  isOverBudget ? "bg-red-500" : "bg-white"
                 )}
-                style={{ width: `${Math.min(percentSpent, 100)}%` }}
               />
             </div>
-            {isOverBudget && (
-              <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider animate-pulse">
-                ⚠️ You are over spending this month!
-              </p>
-            )}
           </div>
         </div>
         
-        {/* Decorative background element */}
-        <div className="absolute -right-10 -top-10 w-48 h-48 bg-white/5 rounded-full blur-3xl" />
-        <div className="absolute -left-10 -bottom-10 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl" />
+        {/* Abstract artifacts */}
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-brand-accent/5 rounded-full blur-[120px] -mr-40 -mt-40 group-hover:bg-brand-accent/15 transition-all duration-1000" />
+        <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-white/[0.02] rounded-full blur-[100px] -ml-20 -mb-20" />
       </div>
 
       {/* Daily Allowance Widget */}
       <div className={cn(
-        "rounded-[40px] p-8 shadow-lg flex items-center justify-between relative overflow-hidden transition-all duration-500",
-        dailyAllowance.isExceeded ? "bg-red-500 text-white shadow-red-100" : "bg-indigo-600 text-white shadow-indigo-100"
+        "rounded-4xl p-10 shadow-3xl flex items-center justify-between relative overflow-hidden group transition-all duration-700",
+        dailyAllowance.isExceeded ? "bg-red-50 border border-red-100" : "bg-brand-gray-light border border-brand-gray-light"
       )}>
-        <div className="relative z-10">
-          <p className={cn(
-            "text-[10px] font-bold uppercase tracking-widest mb-2",
-            dailyAllowance.isExceeded ? "text-red-100" : "text-indigo-200"
-          )}>
-            {dailyAllowance.isExceeded ? 'Budget Exceeded' : 'Daily Spending Limit'}
-          </p>
-          <div className="flex items-baseline gap-1">
-            <span className={cn(
-              "text-2xl font-black",
-              dailyAllowance.isExceeded ? "text-red-100" : "text-indigo-200"
-            )}>₹</span>
-            <h3 className="text-5xl font-black tracking-tighter">
+        <div className="relative z-10 w-full">
+          <div className="flex items-center gap-3 mb-8">
+            <div className={cn(
+              "w-12 h-12 rounded-[20px] flex items-center justify-center shadow-inner transition-transform group-hover:scale-110 duration-500",
+              dailyAllowance.isExceeded ? "bg-red-500 text-white" : "bg-brand-black text-white"
+            )}>
+              {dailyAllowance.isExceeded ? <AlertCircle className="w-6 h-6" /> : <Coffee className="w-6 h-6" />}
+            </div>
+            <div>
+              <p className={cn(
+                "text-[10px] font-black uppercase tracking-[0.3em] leading-tight",
+                dailyAllowance.isExceeded ? "text-red-500" : "text-brand-gray-muted"
+              )}>
+                {dailyAllowance.isExceeded ? 'Daily Threshold Exceeded' : 'Safe to Spend Today'}
+              </p>
+              <div className="flex items-center gap-1.5 mt-1">
+                <div className={cn("w-1.5 h-1.5 rounded-full", dailyAllowance.isExceeded ? "bg-red-500" : "bg-brand-accent animate-pulse")} />
+                <span className="text-[8px] font-bold text-brand-gray-muted uppercase tracking-widest">Real-time Calculation</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-baseline gap-2 mb-8">
+            <span className="text-3xl font-display font-bold text-brand-black/20">₹</span>
+            <h3 className="text-7xl font-display font-bold tracking-tighter text-brand-black">
               {Math.floor(dailyAllowance.amount).toLocaleString('en-IN')}
             </h3>
-            <span className={cn(
-              "text-xl font-bold ml-1",
-              dailyAllowance.isExceeded ? "text-red-100" : "text-indigo-200"
-            )}>
+            <span className="text-2xl font-display font-bold text-brand-gray-muted/40">
               .{((dailyAllowance.amount % 1) * 100).toFixed(0).padStart(2, '0')}
             </span>
           </div>
-          <p className={cn(
-            "text-[10px] font-bold uppercase tracking-widest mt-2",
-            dailyAllowance.isExceeded ? "text-red-100" : "text-indigo-200"
-          )}>
-            {dailyAllowance.isExceeded ? 'Try to minimize expenses' : 'Safe to spend today'}
-          </p>
-        </div>
-        <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-[24px] flex items-center justify-center relative z-10">
-          {dailyAllowance.isExceeded ? (
-            <AlertCircle className="w-8 h-8 text-white" />
-          ) : (
-            <Coffee className="w-8 h-8 text-white" />
-          )}
+          
+          <div className="flex items-center justify-between">
+            <div className={cn(
+              "px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2",
+              dailyAllowance.isExceeded ? "bg-red-100 text-red-600" : "bg-white text-brand-gray-muted shadow-sm"
+            )}>
+              {dailyAllowance.isExceeded ? 'Exhausted' : `Used ₹${dailyAllowance.todaySpent.toLocaleString()}`}
+            </div>
+            {dailyAllowance.todaySpent > 0 && !dailyAllowance.isExceeded && (
+              <div className="flex gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className={cn(
+                      "w-1 h-3 rounded-full", 
+                      i < Math.ceil((dailyAllowance.todaySpent / (dailyAllowance.amount + dailyAllowance.todaySpent)) * 5) ? "bg-brand-accent" : "bg-brand-gray-muted/20"
+                    )} 
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         
-        {/* Decorative background element */}
-        <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/5 rounded-full blur-3xl" />
+        {/* Refined backgrounds */}
+        <div className={cn(
+          "absolute right-0 top-0 w-80 h-80 rounded-full blur-[100px] -mr-40 -mt-40 transition-opacity duration-1000",
+          dailyAllowance.isExceeded ? "bg-red-500/5" : "bg-brand-accent/5 opacity-40 group-hover:opacity-100"
+        )} />
       </div>
 
       {/* Quick Presets */}
-      <div className="space-y-3">
-        <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 px-2">Quick Add</h3>
-        <div className="grid grid-cols-4 gap-3">
+      <div className="space-y-4">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gray-muted px-4">Instant Ledger</h3>
+        <div className="grid grid-cols-4 gap-4">
           {presets.map((preset) => (
-            <button
+            <motion.button
               key={preset.id}
+              whileTap={{ scale: 0.95 }}
               onClick={() => onQuickAdd(preset)}
-              className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center gap-2 hover:bg-gray-50 active:scale-95 transition-all"
+              className="neo-card p-5 rounded-3xl flex flex-col items-center gap-3 group"
             >
-              <span className="text-xl">{preset.icon}</span>
-              <span className="text-[10px] font-bold text-gray-600">₹{preset.amount}</span>
-            </button>
+              <div className="w-12 h-12 bg-brand-gray-light rounded-2xl flex items-center justify-center group-hover:bg-brand-black group-hover:text-white transition-all duration-300">
+                <span className="text-2xl">{preset.icon}</span>
+              </div>
+              <span className="text-xs font-display font-bold text-brand-black">₹{preset.amount}</span>
+            </motion.button>
           ))}
         </div>
       </div>
 
-      {/* Bill Reminders */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500">Upcoming Bills</h3>
-          <button 
-            onClick={onManageBills}
-            className="text-xs font-medium text-black hover:underline"
-          >
-            Manage
-          </button>
-        </div>
-        <div className="space-y-4">
-          {bills.length === 0 ? (
-            <p className="text-center text-gray-400 text-sm py-4">No bills added</p>
-          ) : (
-            bills.map((bill) => (
-              <div key={bill.id} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <button 
-                    onClick={() => onToggleBill(bill.id)}
-                    className="text-indigo-600"
-                  >
-                    {bill.isPaid ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5 text-gray-300" />}
-                  </button>
-                  <div>
-                    <p className={cn("text-sm font-bold", bill.isPaid && "text-gray-400 line-through")}>{bill.name}</p>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Due on {bill.dueDate}th</p>
-                  </div>
+      {/* Main Grid Content */}
+      <div className="grid grid-cols-1 gap-8">
+        {/* Recent Activity */}
+        <div className="neo-card rounded-4xl p-8">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-sm font-display font-bold uppercase tracking-[0.1em] text-brand-black">Recent Activity</h3>
+            <button className="text-xs font-bold text-brand-accent hover:underline px-2 py-1">All History</button>
+          </div>
+          <div className="space-y-6">
+            {recentExpenses.length === 0 ? (
+              <div className="py-10 text-center flex flex-col items-center gap-3">
+                <div className="w-16 h-16 bg-brand-gray-light rounded-full flex items-center justify-center">
+                  <ReceiptText className="w-8 h-8 text-brand-gray-muted/40" />
                 </div>
-                <span className={cn("text-sm font-black", bill.isPaid ? "text-gray-400" : "text-gray-900")}>
-                  ₹{bill.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </span>
+                <p className="text-xs font-medium text-brand-gray-muted">No recent transactions</p>
               </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 gap-6">
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 min-w-0">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-4">Spending by Category</h3>
-          <div className="h-48 w-full min-h-[192px] flex items-center justify-center">
-            {categoryData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%" minHeight={100}>
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={getCategoryColor(entry.name)} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
             ) : (
-              <div className="text-center">
-                <p className="text-xs text-gray-400">No data for this month</p>
-              </div>
+              recentExpenses.map((expense) => (
+                <div key={expense.id} className="flex items-center justify-between group">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-brand-gray-light flex items-center justify-center group-hover:bg-brand-black transition-colors duration-300">
+                      <ArrowDownRight className="w-5 h-5 text-red-500 group-hover:text-white transition-colors" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-brand-black">{expense.description}</p>
+                      <p className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.1em] mt-0.5">{expense.category}</p>
+                    </div>
+                  </div>
+                  <span className="text-base font-display font-bold text-brand-black">-₹{expense.amount.toLocaleString('en-IN')}</span>
+                </div>
+              ))
             )}
           </div>
-          <div className="grid grid-cols-2 gap-2 mt-4">
-            {categoryData.map((entry) => (
-              <div key={entry.name} className="flex items-center gap-2 text-xs">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getCategoryColor(entry.name) }} />
-                <span className="text-gray-600 truncate">{entry.name}</span>
-                <span className="font-medium ml-auto">₹{entry.value.toLocaleString('en-IN')}</span>
-              </div>
-            ))}
+        </div>
+
+        {/* Bill Reminders */}
+        <div className="neo-card rounded-4xl p-8 relative overflow-hidden">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-sm font-display font-bold uppercase tracking-[0.1em] text-brand-black">Due This Week</h3>
+            <button 
+              onClick={onManageBills}
+              className="text-xs font-bold text-brand-black/40 hover:text-brand-black transition-colors"
+            >
+              Calendar
+            </button>
+          </div>
+          <div className="space-y-6">
+            {bills.length === 0 ? (
+              <p className="text-center text-brand-gray-muted text-xs py-10 opacity-60">No upcoming obligations</p>
+            ) : (
+              bills.map((bill) => (
+                <div key={bill.id} className="flex items-center justify-between group">
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={() => onToggleBill(bill.id)}
+                      className="transition-transform active:scale-90"
+                    >
+                      {bill.isPaid ? 
+                        <div className="w-6 h-6 rounded-full bg-brand-accent flex items-center justify-center"><CheckCircle2 className="w-4 h-4 text-white" /></div> : 
+                        <div className="w-6 h-6 rounded-full border-2 border-brand-gray-muted/30 hover:border-brand-black transition-colors" />
+                      }
+                    </button>
+                    <div>
+                      <p className={cn("text-sm font-bold transition-all", bill.isPaid ? "text-brand-gray-muted line-through" : "text-brand-black")}>{bill.name}</p>
+                      <p className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.1em] mt-0.5">Due {bill.dueDate}th</p>
+                    </div>
+                  </div>
+                  <span className={cn("text-sm font-display font-bold", bill.isPaid ? "text-brand-gray-muted" : "text-brand-black")}>
+                    ₹{bill.amount.toLocaleString('en-IN')}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Recent Activity */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500">Recent Transactions</h3>
-          <button className="text-xs font-medium text-black hover:underline">View All</button>
-        </div>
-        <div className="space-y-4">
-          {recentExpenses.length === 0 ? (
-            <p className="text-center text-gray-400 text-sm py-4">No transactions yet</p>
-          ) : (
-            recentExpenses.map((expense) => (
-              <div key={expense.id} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center">
-                    <ArrowDownRight className="w-5 h-5 text-red-500" />
+        {/* Categories Analysis */}
+        <div className="neo-card rounded-4xl p-8">
+          <h3 className="text-sm font-display font-bold uppercase tracking-[0.1em] text-brand-black mb-10">Wallet Composition</h3>
+          <div className="flex flex-col md:flex-row items-center gap-10">
+            <div className="h-48 w-48 relative shrink-0">
+              {categoryData.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={categoryData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={65}
+                        outerRadius={85}
+                        paddingAngle={4}
+                        dataKey="value"
+                        animationBegin={200}
+                        animationDuration={1500}
+                      >
+                        {categoryData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.name === 'Other' ? '#E5E5E5' : index === 0 ? '#0A0A0A' : index === 1 ? '#007AFF' : getCategoryColor(entry.name)} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <p className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.1em]">Total</p>
+                    <p className="text-xl font-display font-bold">₹{totalSpent.toLocaleString('en-IN')}</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold">{expense.description}</p>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wider">{expense.category}</p>
+                </>
+              ) : (
+                <div className="h-full flex items-center justify-center text-center">
+                  <p className="text-xs text-brand-gray-muted opacity-60">No spending data</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="w-full space-y-4">
+              {categoryData.slice(0, 5).map((entry, index) => (
+                <div key={entry.name} className="flex flex-col gap-1.5 w-full">
+                  <div className="flex justify-between items-end text-[10px] font-bold uppercase tracking-[0.1em]">
+                    <span className="text-brand-black">{entry.name}</span>
+                    <span className="text-brand-gray-muted">₹{entry.value.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-brand-gray-light rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-brand-black transition-all duration-1000" 
+                      style={{ 
+                        width: `${(entry.value / totalSpent) * 100}%`,
+                        backgroundColor: entry.name === 'Other' ? '#E5E5E5' : index === 0 ? '#0A0A0A' : index === 1 ? '#007AFF' : getCategoryColor(entry.name)
+                      }} 
+                    />
                   </div>
                 </div>
-                <span className="text-sm font-bold">-₹{expense.amount.toLocaleString('en-IN')}</span>
-              </div>
-            ))
-          )}
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

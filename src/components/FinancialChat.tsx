@@ -59,43 +59,44 @@ export default function FinancialChat({ expenses, income, budget }: FinancialCha
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-6 w-14 h-14 bg-black text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 group"
+        className="fixed bottom-36 left-6 w-14 h-14 bg-brand-black text-white rounded-[20px] shadow-[0_20px_40px_rgba(0,0,0,0.3)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 group"
       >
-        <Bot className="w-6 h-6" />
-        <div className="absolute -top-1 -right-1 w-4 h-4 bg-indigo-500 rounded-full border-2 border-white animate-pulse" />
+        <Sparkles className="w-6 h-6 group-hover:rotate-12 transition-transform duration-500" />
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-brand-accent rounded-full border-2 border-white animate-pulse" />
       </button>
 
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 lg:p-12">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-brand-black/40 backdrop-blur-xl"
             />
 
             <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              className="relative w-full max-w-lg bg-gray-50 h-[85vh] sm:h-[600px] flex flex-col rounded-t-[40px] sm:rounded-[40px] overflow-hidden"
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="relative w-full max-w-2xl bg-white h-[90vh] sm:h-[700px] flex flex-col rounded-t-[48px] sm:rounded-[48px] shadow-[0_40px_100px_rgba(0,0,0,0.4)] overflow-hidden"
             >
               {/* Header */}
-              <div className="bg-black p-6 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-indigo-400" />
+              <div className="bg-brand-black p-8 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10">
+                    <Sparkles className="w-6 h-6 text-brand-accent" />
                   </div>
                   <div>
-                    <h3 className="text-white font-bold leading-tight">Financial Assistant</h3>
-                    <p className="text-white/40 text-[10px] uppercase font-black tracking-widest">Always Learning</p>
+                    <h3 className="text-white font-display font-bold text-xl tracking-tight leading-none">Financial Intelligence</h3>
+                    <p className="text-brand-gray-muted text-[10px] uppercase font-bold tracking-[0.2em] mt-2">Gemini 3.0 Real-time</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setIsOpen(false)}
-                  className="p-2 text-white/40 hover:text-white transition-colors"
+                  className="w-10 h-10 flex items-center justify-center text-brand-gray-muted hover:text-white hover:bg-white/10 rounded-xl transition-all"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -104,28 +105,28 @@ export default function FinancialChat({ expenses, income, budget }: FinancialCha
               {/* Chat Area */}
               <div 
                 ref={scrollRef}
-                className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth"
+                className="flex-1 overflow-y-auto p-8 space-y-8 scroll-smooth custom-scrollbar"
               >
                 {messages.length === 0 && (
-                  <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-50 px-8">
-                    <div className="w-16 h-16 bg-gray-200 rounded-[24px] flex items-center justify-center">
-                      <Bot className="w-8 h-8 text-gray-400" />
+                  <div className="flex flex-col items-center justify-center h-full text-center space-y-8 opacity-40 px-10">
+                    <div className="w-20 h-20 bg-brand-gray-light rounded-[32px] flex items-center justify-center shadow-inner">
+                      <Sparkles className="w-10 h-10 text-brand-black/20" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-900">How can I help you today?</h4>
-                      <p className="text-sm">Ask me about your spending, budget, or for tips to save more.</p>
+                      <h4 className="text-xl font-display font-bold text-brand-black leading-tight">Secure Financial Bridge</h4>
+                      <p className="text-xs font-medium text-brand-gray-muted mt-2">Analyze spending patterns, project future balance, or optimize your budget via secure LLM interaction.</p>
                     </div>
-                    <div className="grid grid-cols-1 gap-2 w-full mt-4">
+                    <div className="grid grid-cols-1 gap-3 w-full max-w-sm mt-4">
                       {[
-                        "How much did I spend this week?",
-                        "Can I afford to buy a bike?",
-                        "Give me 3 tips to save money.",
-                        "What is my biggest expense?"
+                        "Analyze this week's spending",
+                        "Prediction of month-end balance",
+                        "Optimization tips for my utility spend",
+                        "Breakdown of recent major purchases"
                       ].map((hint) => (
                         <button
                           key={hint}
                           onClick={() => setInput(hint)}
-                          className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 py-2 px-4 rounded-xl hover:bg-indigo-100 transition-colors"
+                          className="text-[10px] font-bold uppercase tracking-[0.15em] text-brand-black bg-brand-gray-light py-3.5 px-6 rounded-2xl hover:bg-brand-black hover:text-white transition-all duration-300 shadow-sm"
                         >
                           "{hint}"
                         </button>
@@ -138,53 +139,59 @@ export default function FinancialChat({ expenses, income, budget }: FinancialCha
                   <div 
                     key={msg.id}
                     className={cn(
-                      "flex gap-3",
+                      "flex gap-4",
                       msg.role === 'user' ? "flex-row-reverse" : "flex-row"
                     )}
                   >
                     <div className={cn(
-                      "w-8 h-8 rounded-xl flex items-center justify-center shrink-0",
-                      msg.role === 'user' ? "bg-black" : "bg-indigo-600"
+                      "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-sm",
+                      msg.role === 'user' ? "bg-brand-black" : "bg-brand-accent shadow-[0_0_15px_rgba(0,122,255,0.3)]"
                     )}>
-                      {msg.role === 'user' ? <User className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-white" />}
+                      {msg.role === 'user' ? <User className="w-5 h-5 text-white" /> : <Bot className="w-5 h-5 text-white" />}
                     </div>
                     <div className={cn(
-                      "max-w-[80%] p-4 rounded-2xl text-sm font-medium leading-relaxed",
-                      msg.role === 'user' ? "bg-black text-white rounded-tr-none" : "bg-white text-gray-900 shadow-sm border border-gray-100 rounded-tl-none"
+                      "max-w-[85%] p-5 rounded-[24px] text-[13px] font-semibold leading-relaxed shadow-sm",
+                      msg.role === 'user' 
+                        ? "bg-brand-black text-white rounded-tr-none" 
+                        : "bg-brand-gray-light text-brand-black rounded-tl-none border border-brand-gray-light"
                     )}>
                       {msg.content}
                     </div>
                   </div>
                 ))}
                 {isLoading && (
-                  <div className="flex gap-3">
-                    <div className="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0">
-                      <Bot className="w-4 h-4 text-white" />
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 bg-brand-accent rounded-2xl flex items-center justify-center shrink-0 animate-pulse shadow-[0_0_15px_rgba(0,122,255,0.3)]">
+                      <Bot className="w-5 h-5 text-white" />
                     </div>
-                    <div className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100">
-                      <Loader2 className="w-4 h-4 text-indigo-600 animate-spin" />
+                    <div className="bg-brand-gray-light/50 p-6 rounded-[24px] rounded-tl-none border border-brand-gray-light">
+                      <div className="flex gap-1.5">
+                        <div className="w-1.5 h-1.5 bg-brand-accent rounded-full animate-bounce [animation-delay:-0.3s]" />
+                        <div className="w-1.5 h-1.5 bg-brand-accent rounded-full animate-bounce [animation-delay:-0.15s]" />
+                        <div className="w-1.5 h-1.5 bg-brand-accent rounded-full animate-bounce" />
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
 
               {/* Input Area */}
-              <div className="p-6 bg-white border-t border-gray-100">
+              <div className="p-8 bg-white border-t border-brand-gray-light shadow-[0_-20px_50px_rgba(0,0,0,0.02)]">
                 <form 
                   onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-                  className="relative"
+                  className="relative group"
                 >
                   <input 
                     autoFocus
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask me anything..."
-                    className="w-full bg-gray-50 border-none rounded-[24px] py-4 pl-6 pr-14 text-sm font-bold focus:ring-2 focus:ring-black transition-all"
+                    placeholder="Inquire about habits, limits, or streaks..."
+                    className="w-full bg-brand-gray-light/50 border-none rounded-[28px] py-5 pl-8 pr-16 text-sm font-bold focus:ring-2 focus:ring-brand-black transition-all outline-none placeholder:text-brand-gray-muted/50"
                   />
                   <button
                     disabled={!input.trim() || isLoading}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all disabled:opacity-20"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-11 h-11 bg-brand-black text-white rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all disabled:opacity-10 shadow-lg"
                   >
                     <Send className="w-4 h-4" />
                   </button>
