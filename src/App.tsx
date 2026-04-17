@@ -90,11 +90,15 @@ export default function App() {
 
   // Auth Listener
   useEffect(() => {
-    // Check for quick add param immediately
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('quickadd')) {
-      setIsQuickAddOpen(true);
-    }
+    const checkParams = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('quickadd')) {
+        setIsQuickAddOpen(true);
+      }
+    };
+    
+    checkParams();
+    window.addEventListener('popstate', checkParams);
 
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
@@ -111,6 +115,7 @@ export default function App() {
     
     return () => {
       unsubscribe();
+      window.removeEventListener('popstate', checkParams);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);
@@ -465,10 +470,26 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans pb-24">
-      {/* Header - Hidden in Quick Add mode */}
-      {!isQuickAddOpen && (
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4">
+    <div className={cn(
+      "min-h-screen font-sans selection:bg-indigo-100 selection:text-indigo-900 overflow-x-hidden transition-colors duration-500",
+      isQuickAddOpen ? "bg-black" : "bg-[#F5F5F5]"
+    )}>
+      {isQuickAddOpen ? (
+        <div className="fixed inset-0 bg-black z-[100]">
+          <AddTransaction 
+            onClose={() => {
+              setIsQuickAddOpen(false);
+              window.history.replaceState({}, '', window.location.pathname);
+            }} 
+            onAdd={addTransaction} 
+            categories={Object.keys(budget.categories)}
+            isIslandMode={true}
+          />
+        </div>
+      ) : (
+        <>
+          {/* Header */}
+          <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4 text-[#1A1A1A]">
           <div className="max-w-md mx-auto flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
@@ -492,10 +513,9 @@ export default function App() {
             </div>
           </div>
         </header>
-      )}
 
       {/* Main Content */}
-      <main className={cn("max-w-md mx-auto px-6 pt-6", isQuickAddOpen && "blur-xl grayscale opacity-20 transition-all duration-700")}>
+      <main className="max-w-md mx-auto px-6 pt-6">
         <AnimatePresence mode="wait">
           {activeTab === 'dashboard' && (
             <motion.div
@@ -515,6 +535,8 @@ export default function App() {
                 onQuickAdd={addFromPreset}
                 onToggleBill={toggleBillPaid}
                 onManageBills={() => setActiveTab('bills')}
+                showInstallBtn={showInstallBtn}
+                onInstall={handleInstall}
               />
             </motion.div>
           )}
@@ -647,15 +669,11 @@ export default function App() {
 
       {/* Add Transaction Modal */}
       <AnimatePresence>
-        {(isAddModalOpen || isQuickAddOpen) && (
+        {(isAddModalOpen && !isQuickAddOpen) && (
           <AddTransaction 
-            onClose={() => {
-              setIsAddModalOpen(false);
-              setIsQuickAddOpen(false);
-            }} 
+            onClose={() => setIsAddModalOpen(false)} 
             onAdd={addTransaction} 
             categories={Object.keys(budget.categories)}
-            isIslandMode={isQuickAddOpen}
           />
         )}
       </AnimatePresence>
@@ -675,6 +693,8 @@ export default function App() {
         income={income}
         budget={budget}
       />
+    </>
+  )}
     </div>
   );
 }

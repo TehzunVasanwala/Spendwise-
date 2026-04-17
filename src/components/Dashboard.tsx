@@ -21,6 +21,8 @@ interface DashboardProps {
   onQuickAdd: (preset: QuickPreset) => void;
   onToggleBill: (id: string) => void;
   onManageBills: () => void;
+  showInstallBtn?: boolean;
+  onInstall?: () => void;
 }
 
 const COLORS = {
@@ -48,7 +50,9 @@ export default function Dashboard({
   presets, 
   onQuickAdd, 
   onToggleBill,
-  onManageBills
+  onManageBills,
+  showInstallBtn,
+  onInstall
 }: DashboardProps) {
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -117,6 +121,27 @@ export default function Dashboard({
 
   return (
     <div className="space-y-6 pb-8">
+      {/* PWA Install Banner */}
+      {showInstallBtn && (
+        <div className="bg-indigo-600 text-white rounded-2xl p-4 flex items-center justify-between shadow-lg shadow-indigo-100 animate-in fade-in slide-in-from-top-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-indigo-200" />
+            </div>
+            <div>
+              <p className="text-xs font-bold">Install SpendWise</p>
+              <p className="text-[10px] text-indigo-100">Add to your home screen for full access</p>
+            </div>
+          </div>
+          <button 
+            onClick={onInstall}
+            className="px-4 py-2 bg-white text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-colors"
+          >
+            Install
+          </button>
+        </div>
+      )}
+
       {/* Month Selector */}
       <div className="flex items-center justify-between bg-white rounded-2xl p-2 shadow-sm border border-gray-100">
         <button 
