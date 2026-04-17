@@ -9,10 +9,12 @@ import { cn } from '../lib/utils';
 interface BillsProps {
   bills: Bill[];
   userId: string;
-  categories: Category[];
+  categories: string[];
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-export default function Bills({ bills, userId, categories }: BillsProps) {
+export default function Bills({ bills, userId, categories, onToggle, onDelete }: BillsProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newBill, setNewBill] = useState({
     name: '',
@@ -46,180 +48,193 @@ export default function Bills({ bills, userId, categories }: BillsProps) {
     }
   };
 
-  const togglePaid = async (bill: Bill) => {
-    try {
-      await updateDoc(doc(db, 'bills', bill.id), {
-        isPaid: !bill.isPaid
-      });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `bills/${bill.id}`);
-    }
-  };
-
-  const deleteBill = async (id: string) => {
-    try {
-      await deleteDoc(doc(db, 'bills', id));
-    } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `bills/${id}`);
-    }
-  };
-
   const sortedBills = [...bills].sort((a, b) => a.dueDate - b.dueDate);
   const unpaidTotal = bills.filter(b => !b.isPaid).reduce((sum, b) => sum + b.amount, 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 pb-32">
+      <div className="flex items-center justify-between px-1">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Monthly Bills</h2>
-          <p className="text-gray-500">Manage your recurring expenses</p>
+          <h2 className="text-3xl font-display font-bold tracking-tight text-brand-black">Obligations</h2>
+          <p className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.2em] mt-1.5 flex items-center gap-1.5">
+            <Calendar className="w-3 h-3 text-brand-accent" />
+            Recurring Financial Weights
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Add Bill
-          </button>
-        </div>
+        <button
+          onClick={() => setIsAdding(true)}
+          className="w-12 h-12 bg-brand-black text-white rounded-2xl shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
       </div>
 
       {unpaidTotal > 0 && (
-        <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center gap-4">
-          <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-600">
-            <AlertCircle className="w-5 h-5" />
+        <div className="bg-brand-black text-white rounded-3xl p-6 flex items-center justify-between relative overflow-hidden group">
+          <div className="relative z-10">
+            <p className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.2em] mb-1 px-1">Unfiltered Exposure</p>
+            <p className="text-3xl font-display font-bold text-white tracking-tight">₹{unpaidTotal.toLocaleString('en-IN')}</p>
           </div>
-          <div>
-            <p className="text-sm font-medium text-amber-900">Upcoming Payments</p>
-            <p className="text-2xl font-bold text-amber-700">₹{unpaidTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+          <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
+            <AlertCircle className="w-6 h-6 text-brand-accent animate-pulse" />
           </div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full blur-3xl -mr-10 -mt-10" />
         </div>
       )}
 
       <AnimatePresence>
         {isAdding && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
           >
-            <form onSubmit={handleAddBill} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Bill Name</label>
-                <input
-                  type="text"
-                  required
-                  value={newBill.name}
-                  onChange={e => setNewBill({ ...newBill, name: e.target.value })}
-                  placeholder="e.g. Rent, Netflix"
-                  className="w-full px-4 py-2 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500"
-                />
+            <div className="neo-card p-8 rounded-4xl bg-white space-y-8 mb-8">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-display font-bold uppercase tracking-[0.1em] text-brand-black">Initialize Obligation</h3>
+                <button onClick={() => setIsAdding(false)} className="text-brand-gray-muted hover:text-brand-black transition-colors">
+                  <Plus className="w-5 h-5 rotate-45" />
+                </button>
               </div>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
-                  <input
-                    type="number"
-                    required
-                    step="0.01"
-                    value={newBill.amount}
-                    onChange={e => setNewBill({ ...newBill, amount: e.target.value })}
-                    placeholder="0.00"
-                    className="w-full pl-10 pr-4 py-2 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500"
-                  />
+              
+              <form onSubmit={handleAddBill} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.2em] px-1">Entity Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={newBill.name}
+                      onChange={e => setNewBill({ ...newBill, name: e.target.value })}
+                      placeholder="e.g. Fiber Internet"
+                      className="w-full px-6 py-4 bg-brand-gray-light border-none rounded-2xl focus:ring-2 focus:ring-brand-black transition-all outline-none font-bold text-brand-black placeholder:font-normal"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.2em] px-1">Financial Impact</label>
+                    <div className="relative">
+                      <span className="absolute left-6 top-1/2 -translate-y-1/2 text-brand-gray-muted font-bold text-sm">₹</span>
+                      <input
+                        type="number"
+                        required
+                        step="0.01"
+                        value={newBill.amount}
+                        onChange={e => setNewBill({ ...newBill, amount: e.target.value })}
+                        placeholder="0.00"
+                        className="w-full pl-10 pr-6 py-4 bg-brand-gray-light border-none rounded-2xl focus:ring-2 focus:ring-brand-black transition-all outline-none font-bold text-brand-black placeholder:font-normal"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.2em] px-1">Monthly Cycle Day</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="31"
+                      required
+                      value={newBill.dueDate}
+                      onChange={e => setNewBill({ ...newBill, dueDate: e.target.value })}
+                      className="w-full px-6 py-4 bg-brand-gray-light border-none rounded-2xl focus:ring-2 focus:ring-brand-black transition-all outline-none font-bold text-brand-black"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.2em] px-1">Classification</label>
+                    <select
+                      value={newBill.category}
+                      onChange={e => setNewBill({ ...newBill, category: e.target.value })}
+                      className="w-full px-6 py-4 bg-brand-gray-light border-none rounded-2xl focus:ring-2 focus:ring-brand-black transition-all outline-none font-bold text-brand-black appearance-none"
+                    >
+                      {categories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Due Date (Day)</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="31"
-                  required
-                  value={newBill.dueDate}
-                  onChange={e => setNewBill({ ...newBill, dueDate: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-              <div className="flex items-end gap-2">
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors"
-                >
-                  Save
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsAdding(false)}
-                  className="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+                <div className="flex gap-4">
+                  <button
+                    type="submit"
+                    className="flex-1 btn-primary"
+                  >
+                    Commit Bill
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsAdding(false)}
+                    className="px-8 py-4 bg-brand-gray-light text-brand-black rounded-2xl text-[10px] font-bold uppercase tracking-[0.1em] hover:bg-brand-black hover:text-white transition-all"
+                  >
+                    Discard
+                  </button>
+                </div>
+              </form>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="space-y-4">
         {sortedBills.map((bill) => (
           <motion.div
             layout
             key={bill.id}
             className={cn(
-              "p-5 rounded-2xl border transition-all",
+              "p-6 rounded-[32px] transition-all duration-500 relative group overflow-hidden border",
               bill.isPaid 
-                ? "bg-gray-50 border-gray-100 opacity-75" 
-                : "bg-white border-gray-100 shadow-sm hover:shadow-md"
+                ? "bg-brand-gray-light/30 border-brand-gray-light/50 grayscale opacity-40 shadow-inner" 
+                : "bg-white border-brand-gray-light shadow-3xl hover:shadow-4xl hover:-translate-y-1"
             )}
           >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-5">
                 <div className={cn(
-                  "w-10 h-10 rounded-xl flex items-center justify-center",
-                  bill.isPaid ? "bg-gray-200 text-gray-500" : "bg-indigo-50 text-indigo-600"
+                  "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shadow-inner",
+                  bill.isPaid ? "bg-brand-gray-light text-brand-gray-muted" : "bg-brand-black text-white"
                 )}>
                   <Calendar className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">{bill.name}</h3>
-                  <p className="text-xs text-gray-500 uppercase tracking-wider">{bill.category}</p>
+                  <h3 className="text-base font-display font-bold text-brand-black tracking-tight">{bill.name}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[8px] font-black uppercase tracking-widest text-brand-gray-muted">{bill.category}</span>
+                    <div className="w-1 h-1 bg-brand-gray-light rounded-full" />
+                    <span className="text-[8px] font-bold text-brand-accent uppercase tracking-widest">Day {bill.dueDate}</span>
+                  </div>
                 </div>
               </div>
               <button
-                onClick={() => deleteBill(bill.id)}
-                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                onClick={() => onDelete(bill.id)}
+                className="p-3 text-brand-gray-muted/20 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all duration-300 active:scale-90"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="flex items-end justify-between">
-              <div>
-                <p className="text-xs text-gray-500 mb-1">Due on day {bill.dueDate}</p>
-                <p className="text-xl font-bold text-gray-900">₹{bill.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[10px] font-bold text-brand-gray-muted opacity-30">₹</span>
+                <p className="text-2xl font-display font-bold text-brand-black tracking-tight">
+                  {bill.amount.toLocaleString('en-IN')}
+                </p>
+                <span className="text-[10px] font-bold text-brand-gray-muted">.00</span>
               </div>
               <button
-                onClick={() => togglePaid(bill)}
+                onClick={() => onToggle(bill.id)}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
+                  "flex items-center gap-2 px-5 p-3 rounded-2xl text-[10px] font-bold uppercase tracking-[0.1em] transition-all active:scale-95 shadow-lg",
                   bill.isPaid 
-                    ? "bg-green-100 text-green-700" 
-                    : "bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600"
+                    ? "bg-brand-black text-white" 
+                    : "bg-brand-gray-light text-brand-black hover:bg-brand-black hover:text-white"
                 )}
               >
                 {bill.isPaid ? (
                   <>
-                    <CheckCircle2 className="w-4 h-4" />
-                    Paid
+                    <CheckCircle2 className="w-4 h-4 text-brand-accent shadow-glow" />
+                    Settled
                   </>
                 ) : (
                   <>
                     <Circle className="w-4 h-4" />
-                    Mark Paid
+                    Execute
                   </>
                 )}
               </button>
@@ -229,17 +244,17 @@ export default function Bills({ bills, userId, categories }: BillsProps) {
       </div>
 
       {bills.length === 0 && !isAdding && (
-        <div className="text-center py-12 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
-          <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900">No bills yet</h3>
-          <p className="text-gray-500 mb-6">Add your recurring monthly bills to stay organized.</p>
-          <button
-            onClick={() => setIsAdding(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-            Add Your First Bill
-          </button>
+        <div className="neo-card rounded-4xl p-20 text-center flex flex-col items-center gap-8 bg-transparent border-2 border-dashed border-brand-gray-light/50">
+          <div className="w-24 h-24 bg-brand-gray-light/50 rounded-[40px] flex items-center justify-center relative">
+            <Calendar className="w-12 h-12 text-brand-gray-muted/20" />
+            <div className="absolute inset-0 bg-brand-accent/5 rounded-[40px] animate-pulse" />
+          </div>
+          <div className="space-y-3">
+            <h4 className="font-display font-bold text-xl text-brand-black tracking-tight">Zero Obligations</h4>
+            <p className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.3em] max-w-[240px] leading-loose mx-auto">
+              Initialize recurring bills to activate the obligation engine.
+            </p>
+          </div>
         </div>
       )}
     </div>

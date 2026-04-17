@@ -178,104 +178,113 @@ export default function Insights({ expenses, income, budget, userStats }: Insigh
       </div>
 
       {/* Structured AI Insights */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-3 px-2">
-          <BrainCircuit className="w-4 h-4 text-brand-black" />
+      <div className="space-y-6 relative">
+        <div className="flex items-center gap-3 px-2 mb-8">
+          <BrainCircuit className="w-5 h-5 text-brand-black" />
           <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-black">Analysis Stream</h3>
         </div>
+
+        {/* Vertical Stream Line */}
+        {insights.length > 0 && !isLoading && (
+          <div className="absolute left-[59px] top-24 bottom-10 w-0.5 bg-gradient-to-b from-brand-gray-light via-brand-gray-light to-transparent hidden md:block" />
+        )}
         
-        {isLoading ? (
-          <div className="space-y-6">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="neo-card p-8 rounded-4xl bg-brand-gray-light/30 border-none">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 bg-brand-gray-light rounded-2xl animate-pulse" />
-                  <div className="space-y-2 flex-1">
-                    <div className="h-4 bg-brand-gray-light rounded-md w-1/3 animate-pulse" />
-                    <div className="h-2 bg-brand-gray-light rounded-md w-1/4 animate-pulse" />
+        <div className="space-y-8 pl-0 md:pl-2">
+          {isLoading ? (
+            <div className="space-y-6">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="neo-card p-8 rounded-4xl bg-brand-gray-light/30 border-none">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 bg-brand-gray-light rounded-2xl animate-pulse" />
+                    <div className="space-y-2 flex-1">
+                      <div className="h-4 bg-brand-gray-light rounded-md w-1/3 animate-pulse" />
+                      <div className="h-2 bg-brand-gray-light rounded-md w-1/4 animate-pulse" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-3 bg-brand-gray-light rounded-md w-full animate-pulse" />
+                    <div className="h-3 bg-brand-gray-light rounded-md w-5/6 animate-pulse" />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <div className="h-3 bg-brand-gray-light rounded-md w-full animate-pulse" />
-                  <div className="h-3 bg-brand-gray-light rounded-md w-5/6 animate-pulse" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : insights.length > 0 ? (
-          insights.map((insight, idx) => (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1, type: 'spring', damping: 20 }}
-              key={idx}
-              className="neo-card p-8 rounded-4xl group hover:shadow-2xl transition-all duration-500 overflow-hidden relative"
-            >
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className={cn(
-                      "w-14 h-14 rounded-[20px] flex items-center justify-center shadow-inner transition-transform duration-500 group-hover:scale-110",
-                      insight.type === 'anomaly' ? "bg-red-50 text-red-600 shadow-red-100/50" :
-                      insight.type === 'warning' ? "bg-orange-50 text-orange-600 shadow-orange-100/50" :
-                      insight.type === 'saving' ? "bg-green-50 text-green-600 shadow-green-100/50" :
-                      "bg-brand-accent/5 text-brand-accent shadow-brand-accent/10"
-                    )}>
-                      {insight.type === 'anomaly' ? <AlertCircle className="w-7 h-7" /> :
-                       insight.type === 'warning' ? <TrendingDown className="w-7 h-7" /> :
-                       insight.type === 'saving' ? <TrendingUp className="w-7 h-7" /> :
-                       <Sparkles className="w-7 h-7" />}
-                    </div>
-                    <div>
-                      <h4 className="font-display font-bold text-lg text-brand-black tracking-tight leading-none mb-2">{insight.title}</h4>
-                      <div className="flex items-center gap-3">
-                        <span className={cn(
-                          "px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest",
-                          insight.type === 'anomaly' ? "bg-red-100 text-red-700" :
-                          insight.type === 'warning' ? "bg-orange-100 text-orange-700" :
-                          insight.type === 'saving' ? "bg-green-100 text-green-700" :
-                          "bg-brand-accent/10 text-brand-accent"
-                        )}>
-                          {insight.type}
-                        </span>
-                        {insight.impact && (
-                          <span className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-widest border-l border-brand-gray-light pl-3">
-                            {insight.impact}
+              ))}
+            </div>
+          ) : insights.length > 0 ? (
+            insights.map((insight, idx) => (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1, type: 'spring', damping: 25 }}
+                key={idx}
+                className="neo-card p-10 rounded-[40px] group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 overflow-hidden relative bg-white border border-brand-gray-light"
+              >
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-6">
+                      <div className={cn(
+                        "w-16 h-16 rounded-[24px] flex items-center justify-center shadow-inner transition-transform duration-500 group-hover:scale-105",
+                        insight.type === 'anomaly' ? "bg-red-50 text-red-600 shadow-red-100/30" :
+                        insight.type === 'warning' ? "bg-orange-50 text-orange-600 shadow-orange-100/30" :
+                        insight.type === 'saving' ? "bg-green-50 text-green-600 shadow-green-100/30" :
+                        "bg-brand-accent/5 text-brand-accent shadow-brand-accent/10"
+                      )}>
+                        {insight.type === 'anomaly' ? <AlertCircle className="w-8 h-8" /> :
+                         insight.type === 'warning' ? <TrendingDown className="w-8 h-8" /> :
+                         insight.type === 'saving' ? <TrendingUp className="w-8 h-8" /> :
+                         <Sparkles className="w-8 h-8" />}
+                      </div>
+                      <div>
+                        <h4 className="font-display font-bold text-xl text-brand-black tracking-tight leading-none mb-3">{insight.title}</h4>
+                        <div className="flex items-center gap-3">
+                          <span className={cn(
+                            "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
+                            insight.type === 'anomaly' ? "bg-red-500 text-white" :
+                            insight.type === 'warning' ? "bg-orange-500 text-white" :
+                            insight.type === 'saving' ? "bg-green-500 text-white" :
+                            "bg-brand-black text-white"
+                          )}>
+                            {insight.type}
                           </span>
-                        )}
+                          {insight.impact && (
+                            <span className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-widest border-l border-brand-gray-light pl-4">
+                              {insight.impact}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                
-                <p className="text-[13px] text-brand-gray-muted font-medium leading-relaxed mb-10 pl-1">
-                  {insight.description}
-                </p>
+                  
+                  <p className="text-[14px] text-brand-gray-muted font-medium leading-relaxed mb-10 pl-1">
+                    {insight.description}
+                  </p>
 
-                {insight.action && (
-                  <button className="flex items-center justify-center gap-3 w-full py-5 bg-brand-gray-light hover:bg-brand-black hover:text-white rounded-[24px] text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 active:scale-95 group/btn overflow-hidden relative">
-                    <span className="relative z-10">{insight.action}</span>
-                    <ArrowRight className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover/btn:translate-x-1" />
-                    <div className="absolute inset-0 bg-brand-accent transform translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500 opacity-0 group-hover/btn:opacity-10" />
-                  </button>
-                )}
+                  {insight.action && (
+                    <button className="flex items-center justify-center gap-3 w-full py-5 bg-brand-gray-light hover:bg-brand-black hover:text-white rounded-[24px] text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 active:scale-95 group/btn overflow-hidden relative">
+                      <span className="relative z-10">{insight.action}</span>
+                      <ArrowRight className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                    </button>
+                  )}
+                </div>
+                {/* Connector Node */}
+                <div className="absolute left-[34px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-4 border-white bg-brand-gray-light hidden md:block z-20 group-hover:bg-brand-accent transition-colors" />
+              </motion.div>
+            ))
+          ) : (
+            <div className="neo-card rounded-4xl p-20 text-center flex flex-col items-center gap-8 bg-transparent border-2 border-dashed border-brand-gray-light/50">
+              <div className="w-24 h-24 bg-brand-gray-light/50 rounded-[40px] flex items-center justify-center relative">
+                <BrainCircuit className="w-12 h-12 text-brand-gray-muted/20" />
+                <div className="absolute inset-0 bg-brand-accent/5 rounded-[40px] animate-pulse" />
               </div>
-              <div className="absolute -right-4 -top-4 w-24 h-24 bg-brand-gray-light/20 rounded-full blur-2xl group-hover:bg-brand-gray-light/40 transition-all duration-700" />
-            </motion.div>
-          ))
-        ) : (
-          <div className="neo-card rounded-4xl p-20 text-center flex flex-col items-center gap-6 bg-transparent border-2 border-dashed border-brand-gray-light">
-            <div className="w-20 h-20 bg-brand-gray-light rounded-[32px] flex items-center justify-center">
-              <BrainCircuit className="w-10 h-10 text-brand-gray-muted/30" />
+              <div className="space-y-3">
+                <h4 className="font-display font-bold text-xl text-brand-black tracking-tight">Intelligence Engine Standby</h4>
+                <p className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.3em] max-w-[240px] leading-loose mx-auto">
+                  Populate your ledger to generate a live analysis stream.
+                </p>
+              </div>
             </div>
-            <div className="space-y-2">
-              <h4 className="font-display font-bold text-brand-black">Ready for Analysis</h4>
-              <p className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.2em] max-w-[200px] leading-loose">
-                Execute transactions to activate the AI stream engine.
-              </p>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

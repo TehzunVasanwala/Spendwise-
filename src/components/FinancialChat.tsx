@@ -59,9 +59,9 @@ export default function FinancialChat({ expenses, income, budget }: FinancialCha
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-36 left-6 w-14 h-14 bg-brand-black text-white rounded-[20px] shadow-[0_20px_40px_rgba(0,0,0,0.3)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 group"
+        className="fixed bottom-32 sm:bottom-36 left-4 sm:left-6 w-12 h-12 sm:w-14 sm:h-14 bg-brand-black text-white rounded-[18px] sm:rounded-[20px] shadow-[0_20px_40px_rgba(0,0,0,0.3)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 group"
       >
-        <Sparkles className="w-6 h-6 group-hover:rotate-12 transition-transform duration-500" />
+        <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 group-hover:rotate-12 transition-transform duration-500" />
         <div className="absolute -top-1 -right-1 w-3 h-3 bg-brand-accent rounded-full border-2 border-white animate-pulse" />
       </button>
 
@@ -135,30 +135,36 @@ export default function FinancialChat({ expenses, income, budget }: FinancialCha
                   </div>
                 )}
 
-                {messages.map((msg) => (
-                  <div 
-                    key={msg.id}
-                    className={cn(
-                      "flex gap-4",
-                      msg.role === 'user' ? "flex-row-reverse" : "flex-row"
-                    )}
-                  >
-                    <div className={cn(
-                      "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-sm",
-                      msg.role === 'user' ? "bg-brand-black" : "bg-brand-accent shadow-[0_0_15px_rgba(0,122,255,0.3)]"
-                    )}>
-                      {msg.role === 'user' ? <User className="w-5 h-5 text-white" /> : <Bot className="w-5 h-5 text-white" />}
-                    </div>
-                    <div className={cn(
-                      "max-w-[85%] p-5 rounded-[24px] text-[13px] font-semibold leading-relaxed shadow-sm",
-                      msg.role === 'user' 
-                        ? "bg-brand-black text-white rounded-tr-none" 
-                        : "bg-brand-gray-light text-brand-black rounded-tl-none border border-brand-gray-light"
-                    )}>
-                      {msg.content}
-                    </div>
-                  </div>
-                ))}
+                {messages.map((msg, idx) => {
+                  const isLast = idx === messages.length - 1;
+                  return (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      key={msg.id}
+                      className={cn(
+                        "flex gap-4",
+                        msg.role === 'user' ? "flex-row-reverse" : "flex-row"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-sm transition-transform duration-500",
+                        msg.role === 'user' ? "bg-brand-black" : "bg-brand-accent shadow-[0_0_15px_rgba(0,122,255,0.3)]",
+                        isLast && "scale-110"
+                      )}>
+                        {msg.role === 'user' ? <User className="w-5 h-5 text-white" /> : <Bot className="w-5 h-5 text-white" />}
+                      </div>
+                      <div className={cn(
+                        "max-w-[80%] p-6 rounded-[32px] text-[13px] font-medium leading-relaxed shadow-sm",
+                        msg.role === 'user' 
+                          ? "bg-brand-black text-white" 
+                          : "bg-brand-gray-light text-brand-black border border-brand-gray-light/50"
+                      )}>
+                        {msg.content}
+                      </div>
+                    </motion.div>
+                  );
+                })}
                 {isLoading && (
                   <div className="flex gap-4">
                     <div className="w-10 h-10 bg-brand-accent rounded-2xl flex items-center justify-center shrink-0 animate-pulse shadow-[0_0_15px_rgba(0,122,255,0.3)]">

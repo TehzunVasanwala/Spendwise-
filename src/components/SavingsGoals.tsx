@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Target, Plus, TrendingUp, Calendar, Trash2, Sparkles } from 'lucide-react';
 import { SavingsGoal } from '../types';
 import { cn } from '../lib/utils';
@@ -92,106 +93,139 @@ function GoalCard({ goal, onUpdate, onDelete }: GoalCardProps) {
   };
 
   return (
-    <div className="neo-card p-8 rounded-4xl relative group overflow-hidden">
+    <div className="neo-card p-10 rounded-4xl relative group overflow-hidden bg-white">
       <button 
         onClick={() => onDelete(goal.id)}
-        className="absolute top-6 right-6 p-2 text-brand-gray-muted/20 hover:text-red-500 hover:bg-red-50 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300"
+        className="absolute top-8 right-8 p-3 text-brand-gray-muted/20 hover:text-red-500 hover:bg-red-50 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 active:scale-90"
       >
-        <Trash2 className="w-4 h-4" />
+        <Trash2 className="w-5 h-5" />
       </button>
 
-      <div className="flex items-start justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-brand-gray-light rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-500">
-            <Target className="w-7 h-7 text-brand-black" />
+      <div className="flex items-start justify-between mb-12">
+        <div className="flex items-center gap-6">
+          <div className="w-16 h-16 bg-brand-gray-light rounded-[24px] flex items-center justify-center shadow-inner group-hover:bg-brand-black transition-colors duration-500 group/icon">
+            <Target className="w-8 h-8 text-brand-black group-hover/icon:text-white transition-colors" />
           </div>
           <div>
-            <h3 className="text-lg font-display font-bold text-brand-black tracking-tight">{goal.name}</h3>
-            <div className="flex items-center gap-2 text-[10px] text-brand-gray-muted font-bold uppercase tracking-[0.2em] mt-1.5">
-              <Calendar className="w-3 h-3" />
-              <span>Due {new Date(goal.deadline).toLocaleDateString()}</span>
+            <h3 className="text-xl font-display font-bold text-brand-black tracking-tight">{goal.name}</h3>
+            <div className="flex items-center gap-3 mt-2">
+              <div className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest text-brand-accent py-1 px-2.5 bg-brand-accent/5 rounded-full">
+                <TrendingUp className="w-2.5 h-2.5" />
+                <span>Active Vault</span>
+              </div>
+              <span className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.1em] border-l border-brand-gray-light pl-3">
+                Dec {new Date(goal.deadline).getDate()}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex items-end justify-between mb-2 px-1">
-        <div>
-          <p className="text-3xl font-display font-bold text-brand-black leading-none">
-            ₹{goal.currentAmount.toLocaleString('en-IN')}
-          </p>
-          <p className="text-[10px] text-brand-gray-muted font-bold uppercase tracking-[0.2em] mt-1.5">
-            of ₹{goal.targetAmount.toLocaleString('en-IN')}
+      <div className="mb-8">
+        <div className="flex items-baseline justify-between mb-4">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-sm font-bold text-brand-gray-muted opacity-30">₹</span>
+            <h4 className="text-4xl font-display font-bold text-brand-black tracking-tighter">
+              {goal.currentAmount.toLocaleString('en-IN')}
+            </h4>
+            <span className="text-sm font-bold text-brand-gray-muted mb-1">.00</span>
+          </div>
+          <p className="text-[10px] font-medium text-brand-gray-muted text-right uppercase tracking-widest leading-tight">
+            Target <br />
+            <span className="text-brand-black font-black">₹{goal.targetAmount.toLocaleString('en-IN')}</span>
           </p>
         </div>
-        <div className="text-right">
-          <span className="text-xs font-bold text-brand-black select-none">{progress.toFixed(0)}%</span>
+
+        <div className="relative pt-2">
+          <div className="h-3 bg-brand-gray-light rounded-full overflow-hidden shadow-inner">
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min(progress, 100)}%` }}
+              transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+              className={cn(
+                "h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(0,0,0,0.15)]",
+                progress >= 100 ? "bg-green-500" : "bg-brand-black"
+              )}
+            >
+              <div className="w-full h-full bg-gradient-to-r from-transparent to-white/10" />
+            </motion.div>
+          </div>
+          
+          <div className="flex justify-between items-center mt-4 px-1">
+            <span className="text-[10px] font-black text-brand-black uppercase tracking-[0.2em]">
+              {progress.toFixed(1)}% Secured
+            </span>
+            <span className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.2em]">
+              Gap: ₹{remaining.toLocaleString('en-IN')}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="h-2.5 bg-brand-gray-light rounded-full overflow-hidden shadow-inner">
-          <div 
-            className="h-full bg-brand-black rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(0,0,0,0.1)]"
-            style={{ width: `${Math.min(progress, 100)}%` }}
-          />
-        </div>
-        <div className="flex justify-end px-1">
-          <span className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.2em]">₹{remaining.toLocaleString('en-IN')} Remaining</span>
-        </div>
-      </div>
-
-      <div className="mt-8 space-y-4 pt-4 border-t border-brand-gray-light/50">
-        <div className="flex gap-3">
+      <div className="mt-10 space-y-5 pt-8 border-t border-brand-gray-light/50">
+        <div className="flex gap-4">
           <button 
             onClick={() => onUpdate(goal.id, 500)}
-            className="flex-1 btn-secondary group/btn"
+            className="flex-1 h-16 bg-brand-gray-light hover:bg-brand-black hover:text-white rounded-[24px] text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 group/btn shadow-sm active:scale-95"
           >
-            <span className="group-hover:scale-110 transition-transform">+₹500</span>
+            <span className="group-hover/btn:scale-110 transition-transform inline-block">+ ₹500</span>
           </button>
           <button 
             onClick={() => onUpdate(goal.id, 1000)}
-            className="flex-1 btn-secondary group/btn"
+            className="flex-1 h-16 bg-brand-gray-light hover:bg-brand-black hover:text-white rounded-[24px] text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 group/btn shadow-sm active:scale-95"
           >
-            <span className="group-hover:scale-110 transition-transform">+₹1000</span>
+            <span className="group-hover/btn:scale-110 transition-transform inline-block">+ ₹1.0K</span>
           </button>
           <button 
             onClick={() => setShowBonus(!showBonus)}
             className={cn(
-              "flex-1 py-4.5 rounded-2xl text-[10px] font-bold uppercase tracking-[0.1em] transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 shadow-sm border",
+              "flex-1 h-16 rounded-[24px] text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-2 active:scale-95 shadow-sm border",
               showBonus 
                 ? "bg-brand-black text-white border-brand-black shadow-lg" 
                 : "bg-white text-brand-black border-brand-gray-light hover:border-brand-black"
             )}
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            Custom
+            <Sparkles className={cn("w-4 h-4", showBonus && "animate-spin")} />
+            Inject
           </button>
         </div>
 
-        {showBonus && (
-          <div className="flex gap-2 animate-in slide-in-from-top-4 fade-in duration-300">
-            <div className="relative flex-1">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-gray-muted text-xs font-bold transition-colors group-focus-within:text-brand-black">₹</span>
-              <input 
-                type="number"
-                value={bonusAmount}
-                onChange={(e) => setBonusAmount(e.target.value)}
-                placeholder="0.00"
-                className="w-full bg-brand-gray-light border-none rounded-2xl py-3.5 pl-8 pr-4 text-xs font-bold focus:ring-2 focus:ring-brand-black transition-all outline-none"
-                autoFocus
-              />
-            </div>
-            <button 
-              onClick={handleAddBonus}
-              disabled={!bonusAmount}
-              className="px-6 py-3.5 bg-brand-black text-white rounded-2xl text-xs font-bold shadow-lg disabled:opacity-20 active:scale-95 transition-all"
+        <AnimatePresence>
+          {showBonus && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="flex gap-3 overflow-hidden"
             >
-              Post
-            </button>
-          </div>
-        )}
+              <div className="relative flex-1 group">
+                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-brand-gray-muted text-lg font-display font-bold transition-colors group-focus-within:text-brand-black">₹</span>
+                <input 
+                  type="number"
+                  value={bonusAmount}
+                  onChange={(e) => setBonusAmount(e.target.value)}
+                  placeholder="Manual Override..."
+                  className="w-full h-16 bg-brand-gray-light/50 border-none rounded-[24px] py-3.5 pl-12 pr-6 text-xl font-display font-bold focus:ring-2 focus:ring-brand-black transition-all outline-none placeholder:text-[10px] placeholder:font-sans placeholder:font-black placeholder:uppercase placeholder:tracking-widest"
+                  autoFocus
+                />
+              </div>
+              <button 
+                onClick={handleAddBonus}
+                disabled={!bonusAmount}
+                className="px-10 h-16 bg-brand-black text-white rounded-[24px] text-[10px] font-bold uppercase tracking-[0.2em] shadow-xl disabled:opacity-20 active:scale-95 transition-all"
+              >
+                Commit
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+      
+      {/* Visual background hint */}
+      <div className={cn(
+        "absolute -bottom-10 -right-10 w-40 h-40 rounded-full blur-[80px] transition-all duration-1000",
+        progress >= 100 ? "bg-green-500/10" : "bg-brand-accent/5 opacity-0 group-hover:opacity-100"
+      )} />
     </div>
   );
 }

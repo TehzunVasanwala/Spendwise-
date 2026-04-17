@@ -14,8 +14,16 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
     @apply bg-white text-brand-black antialiased font-sans overflow-x-hidden;
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior-y: none;
   }
 
   /* Custom Scrollbar */

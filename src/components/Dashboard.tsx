@@ -10,6 +10,7 @@ import {
 import { TrendingUp, AlertCircle, ArrowDownRight, Coffee, Calendar, CheckCircle2, Circle, ChevronLeft, ChevronRight, ReceiptText } from 'lucide-react';
 import { Expense, Income, Budget, SavingsGoal, Category, Bill, QuickPreset } from '../types';
 import { cn } from '../lib/utils';
+import { CATEGORY_UI } from '../lib/constants';
 import { format, differenceInDays, endOfMonth, startOfMonth, subMonths, addMonths, isSameMonth, isToday } from 'date-fns';
 
 interface DashboardProps {
@@ -125,13 +126,13 @@ export default function Dashboard({
   };
 
   return (
-    <div className="space-y-8 pb-32">
+    <div className="space-y-6 sm:space-y-8 pb-32">
       {/* PWA Install Banner */}
       {showInstallBtn && (
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-brand-black text-white rounded-3xl p-5 flex items-center justify-between shadow-2xl relative overflow-hidden"
+          className="bg-brand-black text-white rounded-[32px] sm:rounded-4xl p-5 flex items-center justify-between shadow-2xl relative overflow-hidden"
         >
           <div className="flex items-center gap-4 relative z-10">
             <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
@@ -175,15 +176,15 @@ export default function Dashboard({
       </div>
 
       {/* Summary Card */}
-      <div className="bg-brand-black text-white rounded-4xl p-10 shadow-[0_40px_100px_rgba(0,0,0,0.15)] relative overflow-hidden group">
+      <div className="bg-brand-black text-white rounded-4xl p-6 sm:p-10 shadow-[0_40px_100px_rgba(0,0,0,0.15)] relative overflow-hidden group">
         <div className="relative z-10">
-          <div className="flex justify-between items-start mb-12">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 sm:gap-0 mb-10 sm:mb-12">
             <div>
-              <p className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.3em] mb-3 px-1">Disposable Velocity</p>
-              <h2 className="text-5xl font-display font-bold tracking-tighter leading-none break-all">₹{netFlow.toLocaleString('en-IN')}</h2>
+              <p className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.3em] mb-2 sm:mb-3 px-1">Disposable Velocity</p>
+              <h2 className="text-3xl sm:text-5xl font-display font-bold tracking-tighter leading-none whitespace-nowrap">₹{netFlow.toLocaleString('en-IN')}</h2>
             </div>
             <div className={cn(
-              "backdrop-blur-2xl px-5 py-2.5 rounded-2xl flex items-center gap-2 border shadow-lg transition-transform duration-500 hover:scale-105",
+              "backdrop-blur-2xl px-5 py-2.5 rounded-2xl flex items-center gap-2 border shadow-lg transition-transform duration-500 hover:scale-105 shrink-0",
               isOverBudget ? "bg-red-500/10 border-red-500/20" : "bg-white/5 border-white/10"
             )}>
               {isOverBudget ? (
@@ -200,14 +201,14 @@ export default function Dashboard({
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-12 mb-12">
+          <div className="grid grid-cols-2 gap-6 sm:gap-12 mb-8 sm:mb-12">
             <div>
               <p className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.2em] mb-2 px-1">Total Inflow</p>
-              <p className="text-2xl font-display font-bold text-white tracking-tight">₹{totalIncome.toLocaleString('en-IN')}</p>
+              <p className="text-xl sm:text-2xl font-display font-bold text-white tracking-tight">₹{totalIncome.toLocaleString('en-IN')}</p>
             </div>
             <div>
               <p className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.2em] mb-2 px-1">Monthly Outflow</p>
-              <p className="text-2xl font-display font-bold text-brand-gray-muted tracking-tight">₹{totalSpent.toLocaleString('en-IN')}</p>
+              <p className="text-xl sm:text-2xl font-display font-bold text-brand-gray-muted tracking-tight">₹{totalSpent.toLocaleString('en-IN')}</p>
             </div>
           </div>
 
@@ -252,11 +253,11 @@ export default function Dashboard({
 
       {/* Daily Allowance Widget */}
       <div className={cn(
-        "rounded-4xl p-10 shadow-3xl flex items-center justify-between relative overflow-hidden group transition-all duration-700",
-        dailyAllowance.isExceeded ? "bg-red-50 border border-red-100" : "bg-brand-gray-light border border-brand-gray-light"
+        "rounded-[32px] sm:rounded-4xl p-6 sm:p-10 shadow-3xl flex items-center justify-between relative overflow-hidden group transition-all duration-700",
+        dailyAllowance.isExceeded ? "bg-red-50 border border-red-100" : "bg-white border border-brand-gray-light"
       )}>
         <div className="relative z-10 w-full">
-          <div className="flex items-center gap-3 mb-8">
+          <div className="flex items-center gap-3 mb-6 sm:mb-8">
             <div className={cn(
               "w-12 h-12 rounded-[20px] flex items-center justify-center shadow-inner transition-transform group-hover:scale-110 duration-500",
               dailyAllowance.isExceeded ? "bg-red-500 text-white" : "bg-brand-black text-white"
@@ -277,12 +278,12 @@ export default function Dashboard({
             </div>
           </div>
 
-          <div className="flex items-baseline gap-2 mb-8">
-            <span className="text-3xl font-display font-bold text-brand-black/20">₹</span>
-            <h3 className="text-7xl font-display font-bold tracking-tighter text-brand-black">
+          <div className="flex items-baseline gap-2 mb-6 sm:mb-8 overflow-hidden max-w-full">
+            <span className="text-2xl sm:text-3xl font-display font-bold text-brand-black/20 shrink-0">₹</span>
+            <h3 className="text-4xl sm:text-7xl font-display font-bold tracking-tighter text-brand-black whitespace-nowrap">
               {Math.floor(dailyAllowance.amount).toLocaleString('en-IN')}
             </h3>
-            <span className="text-2xl font-display font-bold text-brand-gray-muted/40">
+            <span className="text-lg sm:text-2xl font-display font-bold text-brand-gray-muted/40 shrink-0">
               .{((dailyAllowance.amount % 1) * 100).toFixed(0).padStart(2, '0')}
             </span>
           </div>
@@ -373,40 +374,55 @@ export default function Dashboard({
         </div>
 
         {/* Bill Reminders */}
-        <div className="neo-card rounded-4xl p-8 relative overflow-hidden">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-sm font-display font-bold uppercase tracking-[0.1em] text-brand-black">Due This Week</h3>
+        <div className="neo-card rounded-4xl p-10 relative overflow-hidden bg-white">
+          <div className="flex items-center justify-between mb-10">
+            <div>
+              <h3 className="text-sm font-display font-bold uppercase tracking-[0.1em] text-brand-black">Upcoming Obligations</h3>
+              <p className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-widest mt-1">Next 7 Days</p>
+            </div>
             <button 
               onClick={onManageBills}
-              className="text-xs font-bold text-brand-black/40 hover:text-brand-black transition-colors"
+              className="w-12 h-12 bg-brand-gray-light rounded-2xl flex items-center justify-center text-brand-black hover:bg-brand-black hover:text-white transition-all duration-300"
             >
-              Calendar
+              <Calendar className="w-5 h-5" />
             </button>
           </div>
-          <div className="space-y-6">
+          
+          <div className="space-y-4">
             {bills.length === 0 ? (
-              <p className="text-center text-brand-gray-muted text-xs py-10 opacity-60">No upcoming obligations</p>
+              <div className="py-12 text-center border-2 border-dashed border-brand-gray-light rounded-[32px] flex flex-col items-center gap-3">
+                <ReceiptText className="w-8 h-8 text-brand-gray-muted/20" />
+                <p className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.2em]">Zero Obligations Detected</p>
+              </div>
             ) : (
               bills.map((bill) => (
-                <div key={bill.id} className="flex items-center justify-between group">
-                  <div className="flex items-center gap-4">
+                <div key={bill.id} className="flex items-center justify-between p-6 bg-brand-gray-light/30 rounded-[28px] group hover:bg-white hover:shadow-xl transition-all duration-500 border border-transparent hover:border-brand-gray-light">
+                  <div className="flex items-center gap-5">
                     <button 
                       onClick={() => onToggleBill(bill.id)}
                       className="transition-transform active:scale-90"
                     >
                       {bill.isPaid ? 
-                        <div className="w-6 h-6 rounded-full bg-brand-accent flex items-center justify-center"><CheckCircle2 className="w-4 h-4 text-white" /></div> : 
-                        <div className="w-6 h-6 rounded-full border-2 border-brand-gray-muted/30 hover:border-brand-black transition-colors" />
+                        <div className="w-8 h-8 rounded-full bg-brand-black flex items-center justify-center shadow-lg"><CheckCircle2 className="w-5 h-5 text-white" /></div> : 
+                        <div className="w-8 h-8 rounded-full border-2 border-brand-gray-muted/30 hover:border-brand-black transition-colors" />
                       }
                     </button>
                     <div>
-                      <p className={cn("text-sm font-bold transition-all", bill.isPaid ? "text-brand-gray-muted line-through" : "text-brand-black")}>{bill.name}</p>
-                      <p className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.1em] mt-0.5">Due {bill.dueDate}th</p>
+                      <p className={cn("text-base font-display font-bold transition-all tracking-tight", bill.isPaid ? "text-brand-gray-muted line-through" : "text-brand-black")}>{bill.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[8px] font-black uppercase tracking-widest text-brand-gray-muted/50">Expiring in</span>
+                        <span className="text-[9px] font-bold text-brand-accent uppercase tracking-widest">Day {bill.dueDate}</span>
+                      </div>
                     </div>
                   </div>
-                  <span className={cn("text-sm font-display font-bold", bill.isPaid ? "text-brand-gray-muted" : "text-brand-black")}>
-                    ₹{bill.amount.toLocaleString('en-IN')}
-                  </span>
+                  <div className="text-right">
+                    <span className={cn("text-lg font-display font-bold leading-none", bill.isPaid ? "text-brand-gray-muted" : "text-brand-black")}>
+                      ₹{bill.amount.toLocaleString('en-IN')}
+                    </span>
+                    {!bill.isPaid && (
+                      <div className="w-1 h-1 bg-red-400 rounded-full mx-auto mt-2 animate-pulse" />
+                    )}
+                  </div>
                 </div>
               ))
             )}
@@ -414,63 +430,80 @@ export default function Dashboard({
         </div>
 
         {/* Categories Analysis */}
-        <div className="neo-card rounded-4xl p-8">
-          <h3 className="text-sm font-display font-bold uppercase tracking-[0.1em] text-brand-black mb-10">Wallet Composition</h3>
-          <div className="flex flex-col md:flex-row items-center gap-10">
-            <div className="h-48 w-48 relative shrink-0">
-              {categoryData.length > 0 ? (
-                <>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={categoryData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={65}
-                        outerRadius={85}
-                        paddingAngle={4}
-                        dataKey="value"
-                        animationBegin={200}
-                        animationDuration={1500}
-                      >
-                        {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.name === 'Other' ? '#E5E5E5' : index === 0 ? '#0A0A0A' : index === 1 ? '#007AFF' : getCategoryColor(entry.name)} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <p className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.1em]">Total</p>
-                    <p className="text-xl font-display font-bold">₹{totalSpent.toLocaleString('en-IN')}</p>
-                  </div>
-                </>
-              ) : (
-                <div className="h-full flex items-center justify-center text-center">
-                  <p className="text-xs text-brand-gray-muted opacity-60">No spending data</p>
-                </div>
-              )}
-            </div>
+        <div className="neo-card rounded-[32px] sm:rounded-4xl p-6 sm:p-10 bg-brand-black text-white relative overflow-hidden group">
+          <div className="relative z-10">
+            <h3 className="text-[10px] font-display font-bold uppercase tracking-[0.2em] text-white/40 mb-8 sm:mb-12">Capital Distribution</h3>
             
-            <div className="w-full space-y-4">
-              {categoryData.slice(0, 5).map((entry, index) => (
-                <div key={entry.name} className="flex flex-col gap-1.5 w-full">
-                  <div className="flex justify-between items-end text-[10px] font-bold uppercase tracking-[0.1em]">
-                    <span className="text-brand-black">{entry.name}</span>
-                    <span className="text-brand-gray-muted">₹{entry.value.toLocaleString('en-IN')}</span>
+            <div className="flex flex-col items-center gap-12">
+              <div className="h-56 w-56 relative group/chart">
+                {categoryData.length > 0 ? (
+                  <>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={categoryData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={75}
+                          outerRadius={95}
+                          paddingAngle={8}
+                          stroke="none"
+                          dataKey="value"
+                        >
+                          {categoryData.map((entry, index) => {
+                            const colorPool = ['#000000', '#007AFF', '#FF8042', '#FFBB28', '#82ca9d', '#6366f1', '#f43f5e'];
+                            return <Cell key={`cell-${index}`} fill={colorPool[index % colorPool.length]} />;
+                          })}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-1">Total Impact</p>
+                      <p className="text-2xl font-display font-bold text-white tracking-tighter">₹{totalSpent.toLocaleString('en-IN')}</p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-center opacity-20">
+                    <ReceiptText className="w-12 h-12" />
                   </div>
-                  <div className="h-1.5 w-full bg-brand-gray-light rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-brand-black transition-all duration-1000" 
-                      style={{ 
-                        width: `${(entry.value / totalSpent) * 100}%`,
-                        backgroundColor: entry.name === 'Other' ? '#E5E5E5' : index === 0 ? '#0A0A0A' : index === 1 ? '#007AFF' : getCategoryColor(entry.name)
-                      }} 
-                    />
-                  </div>
-                </div>
-              ))}
+                )}
+              </div>
+              
+              <div className="w-full space-y-6">
+                {categoryData.slice(0, 4).map((entry, index) => {
+                  const percentage = totalSpent > 0 ? (entry.value / totalSpent) * 100 : 0;
+                  return (
+                    <div key={entry.name} className="space-y-2">
+                      <div className="flex justify-between items-end">
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "w-2 h-2 rounded-full",
+                            index === 0 ? "bg-brand-accent" : index === 1 ? "bg-white" : "bg-white/20"
+                          )} />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">{entry.name}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] font-black tracking-widest text-white">{percentage.toFixed(0)}%</span>
+                        </div>
+                      </div>
+                      <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${percentage}%` }}
+                          transition={{ duration: 1.5, delay: 0.2 }}
+                          className={cn(
+                            "h-full rounded-full",
+                            index === 0 ? "bg-brand-accent" : index === 1 ? "bg-white" : "bg-white/40"
+                          )}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-accent/5 rounded-full blur-[100px] -mr-32 -mt-32 group-hover:bg-brand-accent/20 transition-all duration-1000" />
         </div>
       </div>
     </div>

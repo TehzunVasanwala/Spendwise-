@@ -42,10 +42,10 @@ export default function AddGoal({ onClose, onAdd }: AddGoalProps) {
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
         className="relative w-full max-w-md bg-white rounded-t-4xl sm:rounded-4xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden"
       >
-        <div className="p-8">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-display font-bold tracking-tight text-brand-black">Commitment</h2>
-            <button onClick={onClose} className="btn-ghost">
+        <div className="p-6 sm:p-8">
+          <div className="flex items-center justify-between mb-8 px-1">
+            <h2 className="text-xl sm:text-2xl font-display font-bold tracking-tight text-brand-black">Objective</h2>
+            <button onClick={onClose} className="w-10 h-10 flex items-center justify-center text-brand-gray-muted hover:text-brand-black transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -75,6 +75,7 @@ export default function AddGoal({ onClose, onAdd }: AddGoalProps) {
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 text-3xl font-display font-bold text-brand-gray-muted transition-colors group-focus-within:text-brand-black">₹</span>
                 <input 
                   type="number" 
+                  inputMode="decimal"
                   value={targetAmount}
                   onChange={(e) => setTargetAmount(e.target.value)}
                   placeholder="0.00"
@@ -91,6 +92,7 @@ export default function AddGoal({ onClose, onAdd }: AddGoalProps) {
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-gray-muted font-bold text-xs">₹</span>
                   <input 
                     type="number" 
+                    inputMode="decimal"
                     value={currentAmount}
                     onChange={(e) => setCurrentAmount(e.target.value)}
                     placeholder="0"

@@ -4,6 +4,7 @@ import { X, Sparkles, Loader2, TrendingUp, TrendingDown, Check, ArrowRight } fro
 import { Category, Expense, Income } from '../types';
 import { categorizeExpense } from '../services/geminiService';
 import { cn } from '../lib/utils';
+import { CATEGORY_UI } from '../lib/constants';
 
 interface AddTransactionProps {
   onClose: () => void;
@@ -145,21 +146,31 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
                         <h2 className="text-white/30 text-[10px] font-bold uppercase tracking-[0.3em]">Classification</h2>
                         <span className="text-brand-accent text-[8px] font-black uppercase tracking-widest px-2 py-0.5 bg-brand-accent/10 rounded-full">Required</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-3 max-h-[260px] overflow-y-auto pr-2 custom-scrollbar-dark">
-                        {categories.map((cat) => (
-                          <button
-                            key={cat}
-                            onClick={() => setCategory(cat as Category)}
-                            className={cn(
-                              "py-4 px-5 rounded-[20px] text-[10px] font-bold uppercase tracking-widest transition-all border outline-none",
-                              category === cat 
-                                ? "bg-white text-brand-black border-white shadow-[0_0_30px_rgba(255,255,255,0.15)] scale-[1.02]" 
-                                : "bg-white/5 text-white/30 border-white/5 hover:bg-white/10 hover:border-white/20"
-                            )}
-                          >
-                            {cat}
-                          </button>
-                        ))}
+                      <div className="grid grid-cols-2 gap-3 max-h-[260px] overflow-y-auto pr-2 custom-scrollbar-dark pb-4">
+                        {categories.map((cat) => {
+                          const ui = CATEGORY_UI[cat as keyof typeof CATEGORY_UI] || CATEGORY_UI.Other;
+                          const Icon = ui.icon;
+                          return (
+                            <button
+                              key={cat}
+                              onClick={() => setCategory(cat as Category)}
+                              className={cn(
+                                "flex flex-col items-center gap-3 p-5 rounded-[28px] text-[10px] font-bold uppercase tracking-widest transition-all border outline-none",
+                                category === cat 
+                                  ? "bg-white text-brand-black border-white shadow-[0_20px_40px_rgba(255,255,255,0.2)] scale-[1.02]" 
+                                  : "bg-white/5 text-white/40 border-white/5 hover:bg-white/10 hover:border-white/20"
+                              )}
+                            >
+                              <div className={cn(
+                                "w-10 h-10 rounded-2xl flex items-center justify-center transition-colors shadow-inner",
+                                category === cat ? ui.color : "bg-white/5 text-white/20"
+                              )}>
+                                <Icon className="w-5 h-5" />
+                              </div>
+                              {cat}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -230,10 +241,10 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
         className="relative w-full max-w-md bg-white rounded-t-4xl sm:rounded-4xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden"
       >
-        <div className="p-8">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-display font-bold tracking-tight text-brand-black">Ledger</h2>
-            <button onClick={onClose} className="btn-ghost">
+        <div className="p-6 sm:p-8">
+          <div className="flex items-center justify-between mb-8 px-1">
+            <h2 className="text-xl sm:text-2xl font-display font-bold tracking-tight text-brand-black">Ledger</h2>
+            <button onClick={onClose} className="w-10 h-10 flex items-center justify-center text-brand-gray-muted hover:text-brand-black transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -270,6 +281,7 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
                 <input 
                   type="number" 
                   step="0.01"
+                  inputMode="decimal"
                   autoFocus
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
@@ -307,23 +319,36 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
 
             {type === 'expense' && (
               <div className="space-y-3">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gray-muted px-1">Category</label>
-                <div className="grid grid-cols-2 gap-3 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setCategory(cat as Category)}
-                      className={cn(
-                        "py-3 px-4 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border",
-                        category === cat 
-                          ? "bg-brand-black text-white border-brand-black shadow-lg" 
-                          : "bg-white text-brand-gray-muted border-brand-gray-light hover:border-brand-gray-muted"
-                      )}
-                    >
-                      {cat}
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gray-muted px-1">Category</label>
+                  <span className="text-[8px] font-black text-brand-accent uppercase tracking-widest px-2 py-0.5 bg-brand-accent/5 rounded-md">Unified Library</span>
+                </div>
+                <div className="grid grid-cols-3 gap-3 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar pb-2">
+                  {categories.map((cat) => {
+                    const ui = CATEGORY_UI[cat as keyof typeof CATEGORY_UI] || CATEGORY_UI.Other;
+                    const Icon = ui.icon;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setCategory(cat as Category)}
+                        className={cn(
+                          "flex flex-col items-center gap-2 p-4 rounded-2xl text-[8px] font-black uppercase tracking-widest transition-all border shrink-0",
+                          category === cat 
+                            ? "bg-brand-black text-white border-brand-black shadow-lg" 
+                            : "bg-white text-brand-gray-muted border-brand-gray-light hover:border-brand-gray-muted"
+                        )}
+                      >
+                        <div className={cn(
+                          "w-8 h-8 rounded-xl flex items-center justify-center transition-all",
+                          category === cat ? "bg-white/10 text-white" : ui.color
+                        )}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <span className="truncate w-full text-center">{cat}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

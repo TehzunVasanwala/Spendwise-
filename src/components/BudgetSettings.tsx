@@ -91,11 +91,11 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
       </div>
 
       {/* Account Section */}
-      <div className="neo-card p-8 rounded-4xl bg-brand-black text-white relative overflow-hidden group">
-        <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10">
-              <User className="w-8 h-8 text-brand-accent" />
+      <div className="neo-card p-6 sm:p-8 rounded-[32px] sm:rounded-4xl bg-brand-black text-white relative overflow-hidden group">
+        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <div className="flex items-center gap-5 sm:gap-6">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10">
+              <User className="w-7 h-7 sm:w-8 h-8 text-brand-accent" />
             </div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-gray-muted mb-1">Active Profile</p>
@@ -158,6 +158,7 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
                       <span className="absolute left-0 top-1/2 -translate-y-1/2 text-sm font-bold opacity-30">₹</span>
                       <input 
                         type="number"
+                        inputMode="decimal"
                         value={limit}
                         onChange={(e) => handleUpdateLimit(name, parseFloat(e.target.value) || 0)}
                         className="w-full pl-5 bg-transparent text-xl font-display font-bold outline-none font-mono"
@@ -166,7 +167,7 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
                   </div>
                   <button 
                     onClick={() => handleDeleteCategory(name)}
-                    className="w-10 h-10 bg-white shadow-sm flex items-center justify-center rounded-xl text-brand-gray-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                    className="w-10 h-10 bg-white shadow-sm flex items-center justify-center rounded-xl text-brand-gray-muted hover:text-red-500 sm:opacity-0 group-hover:opacity-100 opacity-100 transition-all duration-300"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -187,6 +188,7 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
               <div className="flex gap-4">
                 <input 
                   type="number"
+                  inputMode="decimal"
                   placeholder="Limit"
                   value={newCategoryLimit}
                   onChange={(e) => setNewCategoryLimit(e.target.value)}

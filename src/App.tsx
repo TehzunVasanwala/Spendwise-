@@ -420,6 +420,15 @@ export default function App() {
     }
   };
 
+  const deleteBill = async (id: string) => {
+    if (!user) return;
+    try {
+      await deleteDoc(doc(db, 'bills', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `bills/${id}`);
+    }
+  };
+
   const updateBudget = async (updatedBudget: Budget) => {
     if (!user) return;
     try {
@@ -546,30 +555,30 @@ export default function App() {
       ) : (
         <>
           {/* Header */}
-          <header className="sticky top-0 z-30 bg-brand-gray-light/80 backdrop-blur-xl border-b border-gray-200/50 px-6 py-5 text-brand-black">
-            <div className="max-w-md mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-3">
+          <header className="sticky top-0 z-30 bg-brand-gray-light/80 backdrop-blur-xl border-b border-gray-200/50 px-4 sm:px-6 py-4 text-brand-black">
+            <div className="max-w-lg mx-auto flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <motion.div 
                   whileHover={{ rotate: 10 }}
-                  className="w-9 h-9 bg-brand-black rounded-xl flex items-center justify-center shadow-lg"
+                  className="w-8 h-8 sm:w-9 sm:h-9 bg-brand-black rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg"
                 >
-                  <Wallet className="w-5 h-5 text-white" />
+                  <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </motion.div>
-                <h1 className="text-xl font-display font-bold tracking-tight">SpendWise</h1>
+                <h1 className="text-lg sm:text-xl font-display font-bold tracking-tight">SpendWise</h1>
               </div>
               <div className="flex items-center gap-1">
                 <button 
                   onClick={() => setActiveTab('settings')}
                   className={cn(
-                    "p-3 rounded-2xl transition-all duration-300",
+                    "p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all duration-300",
                     activeTab === 'settings' ? "bg-brand-black text-white shadow-lg" : "text-brand-gray-muted hover:bg-brand-gray-light hover:text-brand-black"
                   )}
                   aria-label="Settings"
                 >
-                  <Settings className="w-5 h-5" />
+                  <Settings className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
                 </button>
                 <button className="btn-ghost relative">
-                  <Bell className="w-5 h-5" />
+                  <Bell className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
                   {bills.some(b => !b.isPaid) && (
                     <span className="absolute top-2 right-2 w-2 h-2 bg-brand-accent rounded-full border-2 border-brand-gray-light" />
                   )}
@@ -579,7 +588,7 @@ export default function App() {
           </header>
 
           {/* Main Content */}
-          <main className="max-w-md mx-auto px-6 py-4">
+          <main className="max-w-lg mx-auto px-4 sm:px-6 py-4">
             <AnimatePresence mode="wait">
               {activeTab === 'dashboard' && (
                 <motion.div
@@ -642,7 +651,13 @@ export default function App() {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Bills bills={bills} userId={user.uid} categories={Object.keys(budget.categories)} />
+                  <Bills 
+                    bills={bills} 
+                    userId={user.uid} 
+                    categories={Object.keys(budget.categories)} 
+                    onToggle={toggleBillPaid}
+                    onDelete={deleteBill}
+                  />
                 </motion.div>
               )}
 
@@ -677,8 +692,8 @@ export default function App() {
             </AnimatePresence>
           </main>
 
-          <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[92%] max-w-lg z-50">
-            <div className="nav-blur rounded-[40px] px-3 py-3 flex items-center justify-between shadow-[0_20px_80px_rgba(0,0,0,0.15)] relative">
+          <nav className="fixed bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 w-[94%] max-w-lg z-50">
+            <div className="nav-blur rounded-[32px] sm:rounded-[40px] px-2 sm:px-3 py-2 sm:py-3 flex items-center justify-between shadow-[0_20px_80px_rgba(0,0,0,0.15)] relative">
               <NavButton 
                 active={activeTab === 'dashboard'} 
                 onClick={() => setActiveTab('dashboard')}
@@ -755,7 +770,7 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
     <button 
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center gap-1.5 transition-all duration-300 relative px-3 py-1",
+        "flex-1 flex flex-col items-center justify-center gap-1 transition-all duration-300 relative h-14 sm:h-16 outline-none",
         active ? "text-brand-black" : "text-brand-gray-muted"
       )}
     >

@@ -1,26 +1,17 @@
-import { Trash2, Calendar, Tag, Coffee, Car, Film, ShoppingBag, Zap, HeartPulse, MoreHorizontal } from 'lucide-react';
+import { Trash2, Calendar, Tag } from 'lucide-react';
 import { format } from 'date-fns';
 import { Expense, Category } from '../types';
 import { cn } from '../lib/utils';
+import { CATEGORY_UI } from '../lib/constants';
 
 interface ExpenseListProps {
   expenses: Expense[];
   onDelete: (id: string) => void;
 }
 
-const CATEGORY_UI: Record<Category, { icon: any, color: string }> = {
-  Food: { icon: Coffee, color: 'bg-orange-50 text-orange-600' },
-  Transport: { icon: Car, color: 'bg-blue-50 text-blue-600' },
-  Entertainment: { icon: Film, color: 'bg-purple-50 text-purple-600' },
-  Shopping: { icon: ShoppingBag, color: 'bg-pink-50 text-pink-600' },
-  Utilities: { icon: Zap, color: 'bg-yellow-50 text-yellow-600' },
-  Health: { icon: HeartPulse, color: 'bg-red-50 text-red-600' },
-  Other: { icon: MoreHorizontal, color: 'bg-brand-gray-light text-brand-black' }
-};
-
 export default function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
   const getCategoryUI = (category: string) => {
-    return CATEGORY_UI[category as Category] || CATEGORY_UI.Other;
+    return CATEGORY_UI[category as keyof typeof CATEGORY_UI] || CATEGORY_UI.Other;
   };
 
   const groupedExpenses = expenses.reduce((groups, expense) => {
@@ -81,7 +72,7 @@ export default function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
                         <span className="text-base font-display font-bold text-brand-black">₹{expense.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         <button 
                           onClick={() => onDelete(expense.id)}
-                          className="p-3 text-brand-gray-muted/20 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-300 opacity-0 group-hover:opacity-100"
+                          className="p-3 text-brand-gray-muted/20 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-300 sm:opacity-0 group-hover:opacity-100 opacity-100"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
