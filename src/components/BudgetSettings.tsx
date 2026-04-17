@@ -282,6 +282,28 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
           </div>
 
           <div className="p-4 bg-gray-50 rounded-2xl">
+            <h4 className="text-sm font-bold mb-1">How to setup Back Tap (Android/Oppo)</h4>
+            <div className="space-y-3">
+              <div>
+                <p className="text-[10px] font-black uppercase text-orange-600 mb-1">Option 1: Quick Launch (Native)</p>
+                <ol className="text-xs text-gray-500 space-y-1 list-decimal ml-4">
+                  <li>Go to <strong>Settings {"->"} Special Features</strong>.</li>
+                  <li>Select <strong>Quick Launch</strong> and enable it.</li>
+                  <li>Add <strong>Chrome/Browser</strong> with the Quick Add URL.</li>
+                </ol>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase text-orange-600 mb-1">Option 2: Tap, Tap App (Recommended)</p>
+                <ol className="text-xs text-gray-500 space-y-1 list-decimal ml-4">
+                  <li>Download <strong>Tap, Tap</strong> (open source app) from GitHub.</li>
+                  <li>Set "Double Tap" action to <strong>Launch URL</strong>.</li>
+                  <li>Use: <code className="bg-gray-200 px-1 rounded text-black font-mono">{window.location.origin}/?quickadd=true</code></li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 bg-gray-50 rounded-2xl">
             <h4 className="text-sm font-bold mb-1">Try it now</h4>
             <p className="text-xs text-gray-500 mb-3">Test the "Quick Add" interface meant for the back tap feature.</p>
             <button 
