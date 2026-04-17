@@ -285,19 +285,29 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
             <h4 className="text-sm font-bold mb-1">How to setup Back Tap (Android/Oppo)</h4>
             <div className="space-y-3">
               <div>
-                <p className="text-[10px] font-black uppercase text-orange-600 mb-1">Option 1: Quick Launch (Native)</p>
-                <ol className="text-xs text-gray-500 space-y-1 list-decimal ml-4">
-                  <li>Go to <strong>Settings {"->"} Special Features</strong>.</li>
-                  <li>Select <strong>Quick Launch</strong> and enable it.</li>
-                  <li>Add <strong>Chrome/Browser</strong> with the Quick Add URL.</li>
+                <p className="text-[10px] font-black uppercase text-orange-600 mb-1">Option 1: Oppo Quick Launch (Native)</p>
+                <ol className="text-xs text-gray-500 space-y-2 list-decimal ml-4">
+                  <li><strong>Create Link:</strong> In Chrome on your phone, open this page, tap the 3 dots {"->"} <strong>Add to Home screen</strong>. Name it "Quick Add".</li>
+                  <li><strong>Enable:</strong> Go to Phone <strong>Settings {"->"} Special Features {"->"} Quick Launch</strong> and turn it ON.</li>
+                  <li><strong>Configure:</strong> Tap <strong>Edit</strong> in the Quick Launch settings.</li>
+                  <li><strong>Add Shortcut:</strong> Go to the "Apps" or "Shortcuts" tab and find the "Quick Add" icon you just made. Drag it into the menu.</li>
+                  <li><strong>To use:</strong> When unlocking with your fingerprint, <strong>keep your thumb held down</strong>. Slide to the icon and release!</li>
                 </ol>
               </div>
-              <div>
-                <p className="text-[10px] font-black uppercase text-orange-600 mb-1">Option 2: Tap, Tap App (Recommended)</p>
-                <ol className="text-xs text-gray-500 space-y-1 list-decimal ml-4">
-                  <li>Download <strong>Tap, Tap</strong> (open source app) from GitHub.</li>
-                  <li>Set "Double Tap" action to <strong>Launch URL</strong>.</li>
-                  <li>Use: <code className="bg-gray-200 px-1 rounded text-black font-mono">{window.location.origin}/?quickadd=true</code></li>
+              <div className="pt-2 border-t border-gray-100">
+                <p className="text-[10px] font-black uppercase text-orange-600 mb-1">Option 2: Tap, Tap App (Step-by-Step)</p>
+                <ol className="text-xs text-gray-500 space-y-2 list-decimal ml-4">
+                  <li><strong>Download:</strong> Search for "Tap, Tap GitHub KieronQuinn" in your browser. Download the latest <code>.apk</code> file from the Releases page.</li>
+                  <li><strong>Install:</strong> Open the APK and allow "Install from Unknown Sources" in your Oppo settings if prompted.</li>
+                  <li><strong>Permissions:</strong> Open Tap, Tap. Follow the prompts to enable the <strong>Accessibility Service</strong> (this is how it detects the taps).</li>
+                  <li><strong>Action:</strong> Go to <strong>Actions</strong> {"->"} <strong>Add Action</strong> {"->"} <strong>Launch</strong> {"->"} <strong>Launch URL</strong>.</li>
+                  <li><strong>Configure:</strong> Paste your shortcut link: 
+                    <div className="mt-1 p-2 bg-white border border-gray-200 rounded-lg flex items-center justify-between gap-2 overflow-hidden">
+                      <code className="truncate text-[10px] font-mono whitespace-nowrap">{window.location.origin}/?quickadd=true</code>
+                    </div>
+                  </li>
+                  <li><strong>Move to Top:</strong> Drag the "Launch URL" action to the very top of the list in Tap, Tap.</li>
+                  <li><strong>Battery:</strong> For Oppo, go to App Info {"->"} Battery {"->"} <strong>Allow background activity</strong> so it doesn't get killed.</li>
                 </ol>
               </div>
             </div>

@@ -90,6 +90,12 @@ export default function App() {
 
   // Auth Listener
   useEffect(() => {
+    // Check for quick add param immediately
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('quickadd')) {
+      setIsQuickAddOpen(true);
+    }
+
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -99,19 +105,10 @@ export default function App() {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      console.log("Auth state changed. User:", firebaseUser?.email || "None");
       setUser(firebaseUser);
       setIsAuthReady(true);
-      
-      // Check for quick add param
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.has('quickadd')) {
-        setIsQuickAddOpen(true);
-        // Clear param without reload
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, '', newUrl);
-      }
     });
+    
     return () => {
       unsubscribe();
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -469,34 +466,36 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans pb-24">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4">
-        <div className="max-w-md mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-              <Wallet className="w-5 h-5 text-white" />
+      {/* Header - Hidden in Quick Add mode */}
+      {!isQuickAddOpen && (
+        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4">
+          <div className="max-w-md mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                <Wallet className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-xl font-semibold tracking-tight">SpendWise</h1>
             </div>
-            <h1 className="text-xl font-semibold tracking-tight">SpendWise</h1>
+            <div className="flex items-center gap-2">
+              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors relative">
+                <Bell className="w-5 h-5 text-gray-500" />
+                {bills.some(b => !b.isPaid) && (
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+                )}
+              </button>
+              <button 
+                onClick={logout}
+                className="p-2 hover:bg-red-50 rounded-full transition-colors text-gray-500 hover:text-red-500"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors relative">
-              <Bell className="w-5 h-5 text-gray-500" />
-              {bills.some(b => !b.isPaid) && (
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
-              )}
-            </button>
-            <button 
-              onClick={logout}
-              className="p-2 hover:bg-red-50 rounded-full transition-colors text-gray-500 hover:text-red-500"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Main Content */}
-      <main className="max-w-md mx-auto px-6 pt-6">
+      <main className={cn("max-w-md mx-auto px-6 pt-6", isQuickAddOpen && "blur-xl grayscale opacity-20 transition-all duration-700")}>
         <AnimatePresence mode="wait">
           {activeTab === 'dashboard' && (
             <motion.div
@@ -592,55 +591,59 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* Floating Action Button */}
-      <button 
-        onClick={() => setIsAddModalOpen(true)}
-        className="fixed bottom-28 right-6 w-14 h-14 bg-black text-white rounded-2xl shadow-2xl flex items-center justify-center active:scale-90 transition-transform z-40"
-      >
-        <Plus className="w-6 h-6" />
-      </button>
+      {/* Floating Action Button - Hidden in Quick Add */}
+      {!isQuickAddOpen && (
+        <button 
+          onClick={() => setIsAddModalOpen(true)}
+          className="fixed bottom-28 right-6 w-14 h-14 bg-black text-white rounded-2xl shadow-2xl flex items-center justify-center active:scale-90 transition-transform z-40"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+      )}
 
-      {/* Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-gray-200 px-6 py-4 z-40">
-        <div className="max-w-md mx-auto flex items-center justify-between">
-          <NavButton 
-            active={activeTab === 'dashboard'} 
-            onClick={() => setActiveTab('dashboard')}
-            icon={<LayoutDashboard className="w-6 h-6" />}
-            label="Home"
-          />
-          <NavButton 
-            active={activeTab === 'expenses'} 
-            onClick={() => setActiveTab('expenses')}
-            icon={<ReceiptText className="w-6 h-6" />}
-            label="History"
-          />
-          <NavButton 
-            active={activeTab === 'bills'} 
-            onClick={() => setActiveTab('bills')}
-            icon={<CalendarIcon className="w-6 h-6" />}
-            label="Bills"
-          />
-          <NavButton 
-            active={activeTab === 'insights'} 
-            onClick={() => setActiveTab('insights')}
-            icon={<BrainCircuit className="w-6 h-6" />}
-            label="Coach"
-          />
-          <NavButton 
-            active={activeTab === 'goals'} 
-            onClick={() => setActiveTab('goals')}
-            icon={<Target className="w-6 h-6" />}
-            label="Goals"
-          />
-          <NavButton 
-            active={activeTab === 'settings'} 
-            onClick={() => setActiveTab('settings')}
-            icon={<Settings className="w-6 h-6" />}
-            label="Settings"
-          />
-        </div>
-      </nav>
+      {/* Navigation - Hidden in Quick Add */}
+      {!isQuickAddOpen && (
+        <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-gray-200 px-6 py-4 z-40">
+          <div className="max-w-md mx-auto flex items-center justify-between">
+            <NavButton 
+              active={activeTab === 'dashboard'} 
+              onClick={() => setActiveTab('dashboard')}
+              icon={<LayoutDashboard className="w-6 h-6" />}
+              label="Home"
+            />
+            <NavButton 
+              active={activeTab === 'expenses'} 
+              onClick={() => setActiveTab('expenses')}
+              icon={<ReceiptText className="w-6 h-6" />}
+              label="History"
+            />
+            <NavButton 
+              active={activeTab === 'bills'} 
+              onClick={() => setActiveTab('bills')}
+              icon={<CalendarIcon className="w-6 h-6" />}
+              label="Bills"
+            />
+            <NavButton 
+              active={activeTab === 'insights'} 
+              onClick={() => setActiveTab('insights')}
+              icon={<BrainCircuit className="w-6 h-6" />}
+              label="Coach"
+            />
+            <NavButton 
+              active={activeTab === 'goals'} 
+              onClick={() => setActiveTab('goals')}
+              icon={<Target className="w-6 h-6" />}
+              label="Goals"
+            />
+            <NavButton 
+              active={activeTab === 'settings'} 
+              onClick={() => setActiveTab('settings')}
+              icon={<Settings className="w-6 h-6" />}
+              label="Settings"
+            />
+          </div>
+        </nav>
+      )}
 
       {/* Add Transaction Modal */}
       <AnimatePresence>

@@ -32,7 +32,7 @@ export default function QuickAdd({ onClose, onAdd, categories }: QuickAddProps) 
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex flex-col items-center justify-start pt-4 sm:pt-12 overflow-hidden">
+    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex flex-col items-center justify-start pt-4 sm:pt-12 overflow-hidden">
       <motion.div 
         layoutId="dynamic-island"
         initial={{ width: 120, height: 36, borderRadius: 100, y: 0 }}
