@@ -254,6 +254,45 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
           </button>
         </div>
       )}
+
+      {/* Back Tap / Quick Add Section */}
+      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center">
+            <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
+              <Plus className="w-5 h-5 text-orange-600" />
+            </motion.div>
+          </div>
+          <div>
+            <h3 className="font-bold">Back Tap / Quick Add</h3>
+            <p className="text-xs text-gray-500">Add expenses without opening the app</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="p-4 bg-gray-50 rounded-2xl">
+            <h4 className="text-sm font-bold mb-1">How to setup Back Tap (iOS)</h4>
+            <ol className="text-xs text-gray-500 space-y-2 list-decimal ml-4">
+              <li>Open <strong>Shortcuts</strong> app on your iPhone.</li>
+              <li>Create a new Shortcut {"->"} Add Action {"->"} <strong>Open URL</strong>.</li>
+              <li>Paste this URL: <code className="bg-gray-200 px-1 rounded text-black font-mono">{window.location.origin}/?quickadd=true</code></li>
+              <li>Go to <strong>Settings</strong> {"->"} Accessibility {"->"} Touch.</li>
+              <li>Scroll down to <strong>Back Tap</strong> and assign your shortcut to Double or Triple Tap.</li>
+            </ol>
+          </div>
+
+          <div className="p-4 bg-gray-50 rounded-2xl">
+            <h4 className="text-sm font-bold mb-1">Try it now</h4>
+            <p className="text-xs text-gray-500 mb-3">Test the "Quick Add" interface meant for the back tap feature.</p>
+            <button 
+              onClick={() => window.location.search = '?quickadd=true'}
+              className="w-full py-3 bg-white border border-gray-200 text-black rounded-xl font-bold text-sm hover:border-black transition-all flex items-center justify-center gap-2 shadow-sm"
+            >
+              Test Quick Add UI
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

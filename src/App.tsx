@@ -25,6 +25,7 @@ import AddGoal from './components/AddGoal';
 import Insights from './components/Insights';
 import BudgetSettings from './components/BudgetSettings';
 import Bills from './components/Bills';
+import QuickAdd from './components/QuickAdd';
 import { BrainCircuit, Calendar as CalendarIcon } from 'lucide-react';
 import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -48,6 +49,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'expenses' | 'goals' | 'bills' | 'insights' | 'settings'>('dashboard');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBtn, setShowInstallBtn] = useState(false);
   const [userStats, setUserStats] = useState<UserStats>({
@@ -100,6 +102,15 @@ export default function App() {
       console.log("Auth state changed. User:", firebaseUser?.email || "None");
       setUser(firebaseUser);
       setIsAuthReady(true);
+      
+      // Check for quick add param
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('quickadd')) {
+        setIsQuickAddOpen(true);
+        // Clear param without reload
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
     });
     return () => {
       unsubscribe();
@@ -268,10 +279,10 @@ export default function App() {
     }
   }, [user, budget, expenses]);
 
-  const addTransaction = async (data: any) => {
+  const addTransaction = async (data: any, isQuick: boolean = false) => {
     if (!user) return;
     try {
-      if (data.type === 'expense') {
+      if (data.type === 'expense' || isQuick) {
         const newExpense = {
           amount: data.amount,
           description: data.description,
@@ -290,8 +301,9 @@ export default function App() {
         await addDoc(collection(db, 'income'), newIncome);
       }
       setIsAddModalOpen(false);
+      setIsQuickAddOpen(false);
     } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, data.type === 'expense' ? 'expenses' : 'income');
+      handleFirestoreError(error, OperationType.WRITE, (data.type === 'expense' || isQuick) ? 'expenses' : 'income');
     }
   };
 
@@ -647,6 +659,17 @@ export default function App() {
           <AddGoal 
             onClose={() => setIsAddGoalModalOpen(false)} 
             onAdd={addGoal} 
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Quick Add Full Screen Modal */}
+      <AnimatePresence>
+        {isQuickAddOpen && (
+          <QuickAdd 
+            onClose={() => setIsQuickAddOpen(false)}
+            categories={Object.keys(budget.categories) as Category[]}
+            onAdd={(amount, description, category) => addTransaction({ amount, description, category, type: 'expense' }, true)}
           />
         )}
       </AnimatePresence>

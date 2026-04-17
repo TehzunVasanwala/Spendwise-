@@ -38,10 +38,11 @@ export default function Insights({ expenses, income, budget, userStats }: Insigh
   };
 
   useEffect(() => {
-    if (expenses.length > 0 || income.length > 0) {
+    // Only auto-fetch once when data becomes available to save API calls
+    if ((expenses.length > 0 || income.length > 0) && !advice && !prediction) {
       fetchData();
     }
-  }, []);
+  }, [expenses.length, income.length]);
 
   const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
   const totalIncome = income.reduce((sum, i) => sum + i.amount, 0);
