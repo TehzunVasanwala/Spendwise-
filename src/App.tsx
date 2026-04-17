@@ -25,7 +25,6 @@ import AddGoal from './components/AddGoal';
 import Insights from './components/Insights';
 import BudgetSettings from './components/BudgetSettings';
 import Bills from './components/Bills';
-import QuickAdd from './components/QuickAdd';
 import { BrainCircuit, Calendar as CalendarIcon } from 'lucide-react';
 import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -647,11 +646,15 @@ export default function App() {
 
       {/* Add Transaction Modal */}
       <AnimatePresence>
-        {isAddModalOpen && (
+        {(isAddModalOpen || isQuickAddOpen) && (
           <AddTransaction 
-            onClose={() => setIsAddModalOpen(false)} 
+            onClose={() => {
+              setIsAddModalOpen(false);
+              setIsQuickAddOpen(false);
+            }} 
             onAdd={addTransaction} 
             categories={Object.keys(budget.categories)}
+            isIslandMode={isQuickAddOpen}
           />
         )}
       </AnimatePresence>
@@ -662,17 +665,6 @@ export default function App() {
           <AddGoal 
             onClose={() => setIsAddGoalModalOpen(false)} 
             onAdd={addGoal} 
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Quick Add Full Screen Modal */}
-      <AnimatePresence>
-        {isQuickAddOpen && (
-          <QuickAdd 
-            onClose={() => setIsQuickAddOpen(false)}
-            categories={Object.keys(budget.categories) as Category[]}
-            onAdd={(amount, description, category) => addTransaction({ amount, description, category, type: 'expense' }, true)}
           />
         )}
       </AnimatePresence>
