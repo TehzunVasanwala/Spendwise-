@@ -25,6 +25,7 @@ import AddGoal from './components/AddGoal';
 import Insights from './components/Insights';
 import BudgetSettings from './components/BudgetSettings';
 import Bills from './components/Bills';
+import FinancialChat from './components/FinancialChat';
 import { BrainCircuit, Calendar as CalendarIcon } from 'lucide-react';
 import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -668,6 +669,12 @@ export default function App() {
           />
         )}
       </AnimatePresence>
+
+      <FinancialChat 
+        expenses={expenses}
+        income={income}
+        budget={budget}
+      />
     </div>
   );
 }

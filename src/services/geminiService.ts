@@ -1,4 +1,4 @@
-import { Category, Expense, Income, Budget, SpendingPrediction } from "../types";
+import { Category, Expense, Income, Budget, SpendingPrediction, FinancialInsight, ChatMessage } from "../types";
 import { GoogleGenAI, Type } from "@google/genai";
 
 // Initialize Gemini SDK lazily to ensure environment variables are present
@@ -100,7 +100,7 @@ export async function getSpendingPrediction(expenses: Expense[], budget: Budget)
   }
 }
 
-export async function getFinancialAdvice(expenses: Expense[], income: Income[], budget: Budget): Promise<string> {
+export async function getFinancialAdvice(expenses: Expense[], income: Income[], budget: Budget): Promise<FinancialInsight[]> {
   try {
     const ai = getAI();
     const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
@@ -111,28 +111,96 @@ export async function getFinancialAdvice(expenses: Expense[], income: Income[], 
       return acc;
     }, {} as Record<string, number>);
 
-    const prompt = `You are a strict but helpful financial coach. Analyze this user's monthly data and provide 3 concise, actionable pieces of advice.
+    const prompt = `You are an elite financial advisor. Analyze this data and provide 3-4 structured insights.
     - Total Income: ₹${totalIncome}
     - Total Expenses: ₹${totalSpent}
     - Budget Limit: ₹${budget.monthlyLimit}
-    - Expense Categories: ${JSON.stringify(categories)}
+    - Categories: ${JSON.stringify(categories)}
+    - Expenses: ${JSON.stringify(expenses.slice(-30))}
+
+    Look for:
+    - Anomalies: Unusual amounts compared to typical category spend.
+    - Leakage: High spend in lifestyle categories.
+    - Optimization: Where they can save based on trends.
     
-    Your goal is to help the user increase savings. 
-    1. Identify potentially unnecessary spending or trends.
-    2. Suggest specific ways to save.
-    3. Be direct if the user is overspending.
-    
-    Format as a conversational paragraph with bullet points using emojis. Total length should be under 150 words.`;
+    Return a JSON array of objects with title, description, type (saving, warning, tip, anomaly), impact, and action.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              description: { type: Type.STRING },
+              type: { 
+                type: Type.STRING,
+                enum: ["saving", "warning", "tip", "anomaly"]
+              },
+              impact: { type: Type.STRING },
+              action: { type: Type.STRING }
+            },
+            required: ["title", "description", "type"]
+          }
+        }
+      }
     });
     
-    return response.text || "I'm still analyzing your data. Keep tracking your expenses to get personalized advice!";
+    return JSON.parse(response.text);
   } catch (error) {
     console.error("Error getting financial advice:", error);
-    return "I'm having trouble connecting to my financial coach brain right now. Please check back in a moment!";
+    return [];
+  }
+}
+
+export async function getFinancialChatResponse(
+  message: string, 
+  history: ChatMessage[], 
+  context: { expenses: Expense[], income: Income[], budget: Budget }
+): Promise<string> {
+  try {
+    const ai = getAI();
+    const { expenses, income, budget } = context;
+    
+    const systemPrompt = `You are SpendWise AI, a friendly and accurate personal finance assistant. 
+    You have access to the user's financial data to answer questions.
+    
+    CONTEXT:
+    - Total Expenses (Current): ₹${expenses.reduce((s, e) => s + e.amount, 0)}
+    - Total Income (Current): ₹${income.reduce((s, i) => s + i.amount, 0)}
+    - Budget Limit: ₹${budget.monthlyLimit}
+    - Recent Expenses: ${JSON.stringify(expenses.slice(-20))}
+    
+    GUIDELINES:
+    - If user asks about spending (e.g., "How much on food?"), calculate it from the context.
+    - If they ask for advice, be professional and encouraging.
+    - Keep responses concise and use emojis.
+    - If you don't have enough data to answer specifically, say so.`;
+
+    const chatHistory = history.map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.content }]
+    }));
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [
+        ...chatHistory,
+        { role: 'user', parts: [{ text: message }] }
+      ],
+      config: {
+        systemInstruction: systemPrompt,
+      }
+    });
+    
+    return response.text;
+  } catch (error) {
+    console.error("Error in financial chat:", error);
+    return "I'm sorry, I'm having trouble processing your question right now. 😔";
   }
 }
 

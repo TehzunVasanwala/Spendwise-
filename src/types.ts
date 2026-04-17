@@ -73,3 +73,18 @@ export interface SpendingPrediction {
   recommendation: string;
   confidence: number;
 }
+
+export interface FinancialInsight {
+  title: string;
+  description: string;
+  type: 'saving' | 'warning' | 'tip' | 'anomaly';
+  impact?: string;
+  action?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+}

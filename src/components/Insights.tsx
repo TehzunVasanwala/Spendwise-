@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Sparkles, Loader2, BrainCircuit, TrendingUp, TrendingDown, Flame, Trophy, Calendar, Target, AlertCircle } from 'lucide-react';
-import { Expense, Income, Budget, UserStats, SpendingPrediction } from '../types';
+import { Expense, Income, Budget, UserStats, SpendingPrediction, FinancialInsight } from '../types';
 import { getFinancialAdvice, getSpendingPrediction } from '../services/geminiService';
 import { cn } from '../lib/utils';
 
@@ -13,7 +13,7 @@ interface InsightsProps {
 }
 
 export default function Insights({ expenses, income, budget, userStats }: InsightsProps) {
-  const [advice, setAdvice] = useState<string>('');
+  const [insights, setInsights] = useState<FinancialInsight[]>([]);
   const [prediction, setPrediction] = useState<SpendingPrediction | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPredicting, setIsPredicting] = useState(false);
@@ -23,11 +23,11 @@ export default function Insights({ expenses, income, budget, userStats }: Insigh
     setIsPredicting(true);
     
     try {
-      const [adviceResult, predictionResult] = await Promise.all([
+      const [insightsResult, predictionResult] = await Promise.all([
         getFinancialAdvice(expenses, income, budget),
         getSpendingPrediction(expenses, budget)
       ]);
-      setAdvice(adviceResult);
+      setInsights(insightsResult);
       setPrediction(predictionResult);
     } catch (error) {
       console.error("Error fetching insights:", error);
@@ -39,7 +39,7 @@ export default function Insights({ expenses, income, budget, userStats }: Insigh
 
   useEffect(() => {
     // Only auto-fetch once when data becomes available to save API calls
-    if ((expenses.length > 0 || income.length > 0) && !advice && !prediction) {
+    if ((expenses.length > 0 || income.length > 0) && insights.length === 0 && !prediction) {
       fetchData();
     }
   }, [expenses.length, income.length]);
@@ -55,7 +55,7 @@ export default function Insights({ expenses, income, budget, userStats }: Insigh
         <button 
           onClick={fetchData}
           disabled={isLoading}
-          className="p-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-colors disabled:opacity-50"
+          className="p-2 bg-black text-white rounded-full hover:scale-110 active:scale-95 transition-all disabled:opacity-50"
         >
           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
         </button>
@@ -80,137 +80,140 @@ export default function Insights({ expenses, income, budget, userStats }: Insigh
       </div>
 
       {/* AI Spending Prediction */}
-      <div className="bg-white rounded-[32px] p-6 border border-gray-100 shadow-sm overflow-hidden relative">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
-            <Calendar className="w-5 h-5 text-purple-600" />
+      <div className="bg-black text-white rounded-[40px] p-8 shadow-xl relative overflow-hidden">
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
+              <Calendar className="w-6 h-6 text-indigo-400" />
+            </div>
+            <div>
+              <h3 className="font-bold text-xl tracking-tight">Monthly Forecast</h3>
+              <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">Powered by Gemini</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-bold">Monthly Forecast</h3>
-            <p className="text-xs text-gray-500">AI Prediction for end of month</p>
-          </div>
-        </div>
 
-        {isPredicting ? (
-          <div className="flex flex-col items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 text-purple-400 animate-spin mb-2" />
-            <p className="text-xs text-gray-400">Calculating forecast...</p>
-          </div>
-        ) : prediction ? (
-          <div className="space-y-6">
-            <div className="flex items-end justify-between">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Predicted Total</p>
-                <p className={cn("text-3xl font-black", prediction.isOverBudget ? "text-red-600" : "text-green-600")}>
-                  ₹{prediction.forecastedTotal.toLocaleString('en-IN')}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Confidence</p>
-                <div className="flex items-center gap-1">
-                  <div className="flex gap-0.5">
+          {isPredicting ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mb-4" />
+              <p className="text-xs text-white/40 font-bold uppercase tracking-widest animate-pulse">Scanning Habits...</p>
+            </div>
+          ) : prediction ? (
+            <div className="space-y-8">
+              <div className="flex items-end justify-between">
+                <div>
+                  <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Predicted Total</p>
+                  <p className={cn("text-4xl font-black tracking-tight", prediction.isOverBudget ? "text-red-400" : "text-green-400")}>
+                    ₹{prediction.forecastedTotal.toLocaleString('en-IN')}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Confidence</p>
+                  <div className="flex gap-1 justify-end">
                     {[1, 2, 3, 4, 5].map((i) => (
                       <div 
                         key={i} 
                         className={cn(
-                          "w-1 h-3 rounded-full", 
-                          i <= prediction.confidence ? "bg-purple-500" : "bg-gray-100"
+                          "w-1.5 h-4 rounded-full transition-all duration-500", 
+                          i <= prediction.confidence * 5 ? "bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]" : "bg-white/10"
                         )} 
                       />
                     ))}
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className={cn(
-              "p-4 rounded-2xl flex gap-3",
-              prediction.isOverBudget ? "bg-red-50" : "bg-green-50"
-            )}>
-              {prediction.isOverBudget ? (
-                <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
-              ) : (
-                <Target className="w-5 h-5 text-green-600 shrink-0" />
-              )}
-              <p className={cn(
-                "text-xs font-medium leading-relaxed",
-                prediction.isOverBudget ? "text-red-900" : "text-green-900"
+              <div className={cn(
+                "p-6 rounded-[24px] border border-white/5 backdrop-blur-md",
+                prediction.isOverBudget ? "bg-red-500/10" : "bg-green-500/10"
               )}>
-                {prediction.recommendation}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm text-gray-400 text-center py-4">Add more expenses to see your forecast.</p>
-        )}
-      </div>
-
-      {/* AI Coach Card */}
-      <div className="bg-black text-white rounded-[40px] p-8 shadow-xl relative overflow-hidden">
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                <BrainCircuit className="w-7 h-7 text-white" />
-              </div>
-              <div>
-                <h3 className="font-bold text-xl tracking-tight">Financial Coach</h3>
-                <p className="text-xs text-indigo-300 font-medium">AI Spending Analysis</p>
-              </div>
-            </div>
-            <div className="px-3 py-1 bg-white/10 rounded-full border border-white/10">
-              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Strict Mode</span>
-            </div>
-          </div>
-
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-12 space-y-4">
-              <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-              <p className="text-sm text-indigo-200 animate-pulse font-medium">Scanning for useless spending...</p>
-            </div>
-          ) : advice ? (
-            <div className="space-y-6">
-              <div className="text-sm leading-relaxed text-indigo-50 whitespace-pre-line font-medium">
-                {advice}
-              </div>
-              <div className="pt-4 border-t border-white/10">
-                <button 
-                  onClick={fetchData}
-                  className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2"
-                >
-                  Refresh Analysis <Sparkles className="w-3 h-3" />
-                </button>
+                <div className="flex gap-4">
+                  <div className={cn(
+                    "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                    prediction.isOverBudget ? "bg-red-500/20" : "bg-green-500/20"
+                  )}>
+                    {prediction.isOverBudget ? (
+                      <AlertCircle className="w-5 h-5 text-red-400" />
+                    ) : (
+                      <Target className="w-5 h-5 text-green-400" />
+                    )}
+                  </div>
+                  <p className={cn(
+                    "text-sm font-medium leading-relaxed",
+                    prediction.isOverBudget ? "text-red-100" : "text-green-100"
+                  )}>
+                    {prediction.recommendation}
+                  </p>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="text-center py-8">
-              <p className="text-sm text-indigo-200 mb-6">Let AI analyze your habits to find hidden savings.</p>
-              <button 
-                onClick={fetchData}
-                className="w-full py-4 bg-indigo-600 rounded-2xl text-sm font-bold hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/20"
-              >
-                Start Analysis
-              </button>
-            </div>
+            <p className="text-sm text-white/40 text-center py-4">Add more expenses to see your AI forecast.</p>
           )}
         </div>
-
-        {/* Decorative background elements */}
-        <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-indigo-600/20 rounded-full blur-[80px]" />
-        <div className="absolute -left-10 -top-10 w-64 h-64 bg-purple-600/10 rounded-full blur-[80px]" />
+        <div className="absolute -right-20 -top-20 w-80 h-80 bg-indigo-600/10 rounded-full blur-[100px]" />
       </div>
 
-      {/* Savings Focus Tip */}
-      <div className="bg-green-50 border border-green-100 rounded-[32px] p-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-            <Target className="w-5 h-5 text-green-600" />
+      {/* Structured AI Insights */}
+      <div className="space-y-4">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 px-2 flex items-center gap-2">
+          <BrainCircuit className="w-3 h-3" /> Smart Analysis
+        </h3>
+        
+        {isLoading ? (
+          <div className="space-y-4">
+            {[1, 2].map(i => (
+              <div key={i} className="bg-gray-50 h-32 rounded-[32px] animate-pulse" />
+            ))}
           </div>
-          <h4 className="text-sm font-bold text-green-900">Savings Strategy</h4>
-        </div>
-        <p className="text-sm text-green-800 leading-relaxed font-medium">
-          To reach your goals faster, aim to keep "Lifestyle" spending (Eating Out, Movies, Misc) below 15% of your total income. Every rupee saved today is a step closer to your Ladakh trip!
-        </p>
+        ) : insights.length > 0 ? (
+          insights.map((insight, idx) => (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              key={idx}
+              className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm relative overflow-hidden group"
+            >
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={cn(
+                    "w-8 h-8 rounded-xl flex items-center justify-center",
+                    insight.type === 'anomaly' ? "bg-red-50 text-red-600" :
+                    insight.type === 'warning' ? "bg-orange-50 text-orange-600" :
+                    insight.type === 'saving' ? "bg-green-50 text-green-600" :
+                    "bg-blue-50 text-blue-600"
+                  )}>
+                    {insight.type === 'anomaly' ? <AlertCircle className="w-4 h-4" /> :
+                     insight.type === 'warning' ? <TrendingDown className="w-4 h-4" /> :
+                     insight.type === 'saving' ? < TrendingUp className="w-4 h-4" /> :
+                     <Sparkles className="w-4 h-4" />}
+                  </div>
+                  <h4 className="font-bold text-sm text-gray-900">{insight.title}</h4>
+                </div>
+                
+                <p className="text-xs text-gray-600 leading-relaxed mb-4">
+                  {insight.description}
+                </p>
+
+                {insight.impact && (
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-4 bg-indigo-50 w-fit px-3 py-1 rounded-full">
+                    Impact: {insight.impact}
+                  </div>
+                )}
+
+                {insight.action && (
+                  <button className="w-full py-3 bg-gray-50 hover:bg-black hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+                    {insight.action}
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          ))
+        ) : (
+          <div className="bg-gray-50 rounded-[32px] p-8 text-center">
+            <p className="text-sm text-gray-400">Analysis will appear as you spend more.</p>
+          </div>
+        )}
       </div>
     </div>
   );
