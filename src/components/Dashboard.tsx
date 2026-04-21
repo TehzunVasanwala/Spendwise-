@@ -7,11 +7,13 @@ import {
   ResponsiveContainer, 
   Tooltip 
 } from 'recharts';
-import { TrendingUp, AlertCircle, ArrowDownRight, Coffee, Calendar, CheckCircle2, Circle, ChevronLeft, ChevronRight, ReceiptText } from 'lucide-react';
+import { TrendingUp, AlertCircle, ArrowDownRight, Coffee, Calendar, CheckCircle2, Circle, ChevronLeft, ChevronRight, ReceiptText, Sparkles, Wallet } from 'lucide-react';
 import { Expense, Income, Budget, SavingsGoal, Category, Bill, QuickPreset } from '../types';
 import { cn } from '../lib/utils';
 import { CATEGORY_UI } from '../lib/constants';
 import { format, differenceInDays, endOfMonth, startOfMonth, subMonths, addMonths, isSameMonth, isToday } from 'date-fns';
+import { sound } from '../services/soundService';
+import GooglePayButton from '@google-pay/button-react';
 
 interface DashboardProps {
   expenses: Expense[];
@@ -24,7 +26,8 @@ interface DashboardProps {
   onToggleBill: (id: string) => void;
   onManageBills: () => void;
   onUpdateBudget?: (budget: Budget) => void;
-  onNavigate?: (tab: string) => void;
+  onNavigate?: (tab: 'dashboard' | 'expenses' | 'goals' | 'bills' | 'insights' | 'settings') => void;
+  onSync?: () => void;
   showInstallBtn?: boolean;
   onInstall?: () => void;
 }
@@ -57,6 +60,7 @@ export default function Dashboard({
   onManageBills,
   onUpdateBudget,
   onNavigate,
+  onSync,
   showInstallBtn,
   onInstall
 }: DashboardProps) {
@@ -133,8 +137,15 @@ export default function Dashboard({
 
   const recentExpenses = filteredExpenses.slice(0, 3);
 
-  const handlePrevMonth = () => setSelectedDate(subMonths(selectedDate, 1));
-  const handleNextMonth = () => setSelectedDate(addMonths(selectedDate, 1));
+  const handlePrevMonth = () => {
+    sound.playClick();
+    setSelectedDate(subMonths(selectedDate, 1));
+  };
+  
+  const handleNextMonth = () => {
+    sound.playClick();
+    setSelectedDate(addMonths(selectedDate, 1));
+  };
 
   const getCategoryColor = (category: string) => {
     return COLORS[category as keyof typeof COLORS] || '#999';
@@ -185,28 +196,100 @@ export default function Dashboard({
       )}
 
       {/* Month Selector */}
-      <div className="flex items-center justify-between neo-card rounded-3xl p-2">
-        <button 
-          onClick={handlePrevMonth}
-          className="p-3 text-brand-gray-muted hover:text-brand-black transition-colors rounded-2xl hover:bg-brand-gray-light"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <div className="flex flex-col items-center">
-          <span className="text-base font-display font-bold text-brand-black tracking-tight">{format(selectedDate, 'MMMM yyyy')}</span>
-          {isSameMonth(new Date(), selectedDate) && (
-            <span className="text-[10px] font-bold text-brand-accent uppercase tracking-[0.2em] mt-0.5">Current</span>
-          )}
+      <div className="flex items-center gap-3">
+        <div className="flex-1 flex items-center justify-between neo-card rounded-3xl p-2">
+          <button 
+            onClick={handlePrevMonth}
+            className="p-3 text-brand-gray-muted hover:text-brand-black transition-colors rounded-2xl hover:bg-brand-gray-light"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div className="flex flex-col items-center">
+            <span className="text-base font-display font-bold text-brand-black tracking-tight">{format(selectedDate, 'MMMM yyyy')}</span>
+            {isSameMonth(new Date(), selectedDate) && (
+              <span className="text-[10px] font-bold text-brand-accent uppercase tracking-[0.2em] mt-0.5">Current</span>
+            )}
+          </div>
+          <button 
+            onClick={handleNextMonth}
+            className="p-3 text-brand-gray-muted hover:text-brand-black transition-colors rounded-2xl hover:bg-brand-gray-light"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
         </div>
         <button 
-          onClick={handleNextMonth}
-          className="p-3 text-brand-gray-muted hover:text-brand-black transition-colors rounded-2xl hover:bg-brand-gray-light"
+          onClick={onSync}
+          className="p-4 bg-brand-black text-white rounded-[24px] shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 group"
+          title="Smart Sync"
         >
-          <ChevronRight className="w-5 h-5" />
+          <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+          <span className="text-[10px] font-bold uppercase tracking-widest sm:inline hidden">Sync</span>
         </button>
       </div>
 
-      {/* Summary Card */}
+      {/* Google Pay Instant Button */}
+      <div className="neo-card rounded-4xl p-8 bg-gradient-to-br from-brand-gray-light/30 to-white overflow-hidden relative border border-brand-gray-light/50">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
+          <div className="text-center sm:text-left">
+            <h3 className="text-sm font-display font-bold text-brand-black flex items-center gap-2 justify-center sm:justify-start">
+              <Wallet className="w-5 h-5 text-brand-accent" />
+              One-Click Instant Ledger
+            </h3>
+            <p className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-widest mt-1">Pay & Record instantly via GPay</p>
+          </div>
+          <div className="flex shrink-0">
+            <GooglePayButton
+              environment="TEST"
+              paymentRequest={{
+                apiVersion: 2,
+                apiVersionMinor: 0,
+                allowedPaymentMethods: [
+                  {
+                    type: 'CARD',
+                    parameters: {
+                      allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+                      allowedCardNetworks: ['MASTERCARD', 'VISA'],
+                    },
+                    tokenizationSpecification: {
+                      type: 'PAYMENT_GATEWAY',
+                      parameters: {
+                        gateway: 'example',
+                        gatewayMerchantId: 'exampleGatewayMerchantId',
+                      },
+                    },
+                  },
+                ],
+                merchantInfo: {
+                  merchantId: '12345678901234567890',
+                  merchantName: 'SpendWise Demo',
+                },
+                transactionInfo: {
+                  totalPriceStatus: 'FINAL',
+                  totalPriceLabel: 'Total',
+                  totalPrice: '1.00',
+                  currencyCode: 'INR',
+                  countryCode: 'IN',
+                },
+              }}
+              onLoadPaymentData={(paymentRequest) => {
+                console.log('load payment data', paymentRequest);
+                sound.playIncome();
+                onQuickAdd({
+                  id: 'gpay-' + Date.now(),
+                  name: 'GPay Transaction',
+                  amount: 1,
+                  category: 'Other',
+                  icon: '💳'
+                });
+              }}
+              buttonColor="black"
+              buttonType="pay"
+              className="h-12 w-48 sm:w-56"
+            />
+          </div>
+        </div>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full blur-3xl -mr-10 -mt-10" />
+      </div>
       <motion.div 
         whileHover={{ scale: 1.01 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -418,7 +501,10 @@ export default function Dashboard({
             <motion.button
               key={preset.id}
               whileTap={{ scale: 0.95 }}
-              onClick={() => onQuickAdd(preset)}
+              onClick={() => {
+                sound.playClick();
+                onQuickAdd(preset);
+              }}
               className="neo-card p-5 rounded-3xl flex flex-col items-center gap-3 group"
             >
               <div className="w-12 h-12 bg-brand-gray-light rounded-2xl flex items-center justify-center group-hover:bg-brand-black group-hover:text-white transition-all duration-300">
@@ -491,7 +577,10 @@ export default function Dashboard({
                 <div key={bill.id} className="flex items-center justify-between p-6 bg-brand-gray-light/30 rounded-[28px] group hover:bg-white hover:shadow-xl transition-all duration-500 border border-transparent hover:border-brand-gray-light">
                   <div className="flex items-center gap-5">
                     <button 
-                      onClick={() => onToggleBill(bill.id)}
+                      onClick={() => {
+                        sound.playClick();
+                        onToggleBill(bill.id);
+                      }}
                       className="transition-transform active:scale-90"
                     >
                       {bill.isPaid ? 

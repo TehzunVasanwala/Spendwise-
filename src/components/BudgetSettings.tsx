@@ -21,6 +21,13 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
   const [targetLimit, setTargetLimit] = useState(budget.monthlyLimit.toString());
   const [salary, setSalary] = useState(budget.salary?.toString() || '');
 
+  // Keep local state in sync with external budget updates (e.g., from Dashboard edits)
+  React.useEffect(() => {
+    setLocalBudget(budget);
+    setTargetLimit(budget.monthlyLimit.toString());
+    setSalary(budget.salary?.toString() || '');
+  }, [budget]);
+
   const totalAllocated = Object.values(localBudget.categories).reduce((sum: number, limit: number) => sum + limit, 0);
 
   const handleAiDistribute = async () => {

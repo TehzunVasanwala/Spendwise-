@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Target, Plus, TrendingUp, Calendar, Trash2, Sparkles } from 'lucide-react';
 import { SavingsGoal } from '../types';
 import { cn } from '../lib/utils';
+import { sound } from '../services/soundService';
 
 interface SavingsGoalsProps {
   goals: SavingsGoal[];
@@ -26,17 +27,17 @@ export default function SavingsGoals({ goals, onUpdate, onDelete, onAddClick }: 
 
       <div className="space-y-6">
         {goals.length === 0 ? (
-          <div className="neo-card p-16 text-center border-2 border-dashed border-brand-gray-light bg-transparent flex flex-col items-center">
-            <div className="w-20 h-20 bg-brand-gray-light rounded-3xl flex items-center justify-center mb-6">
-              <Target className="w-10 h-10 text-brand-gray-muted/40" />
+          <div className="neo-card p-20 text-center border border-brand-gray-light bg-white/50 backdrop-blur-sm flex flex-col items-center rounded-[44px] shadow-sm">
+            <div className="w-24 h-24 bg-brand-gray-light rounded-[36px] flex items-center justify-center mb-8 shadow-inner">
+              <Target className="w-12 h-12 text-brand-gray-muted/30" />
             </div>
-            <h3 className="text-xl font-display font-bold text-brand-black mb-2">No Active Goals</h3>
-            <p className="text-xs text-brand-gray-muted mb-8 max-w-[200px]">Define your financial milestones to start tracking progress.</p>
+            <h3 className="text-2xl font-display font-bold text-brand-black mb-3">Vision Archive Empty</h3>
+            <p className="text-[10px] font-bold text-brand-gray-muted mb-10 max-w-[220px] uppercase tracking-[0.2em] leading-relaxed">Initialize your financial blueprints to begin systematic capital accumulation.</p>
             <button 
               onClick={onAddClick}
-              className="btn-primary px-8"
+              className="btn-primary py-5 px-10 rounded-[24px] shadow-xl"
             >
-              Initialize Goal
+              Initialize Milestone
             </button>
           </div>
         ) : (
@@ -121,42 +122,44 @@ function GoalCard({ goal, onUpdate, onDelete }: GoalCardProps) {
         </div>
       </div>
 
-      <div className="mb-8">
-        <div className="flex items-baseline justify-between mb-4">
+      <div className="mb-0">
+        <div className="flex items-baseline justify-between mb-6">
           <div className="flex items-baseline gap-1.5">
             <span className="text-sm font-bold text-brand-gray-muted opacity-30">₹</span>
-            <h4 className="text-4xl font-display font-bold text-brand-black tracking-tighter">
+            <h4 className="text-5xl font-display font-bold text-brand-black tracking-tighter">
               {goal.currentAmount.toLocaleString('en-IN')}
             </h4>
-            <span className="text-sm font-bold text-brand-gray-muted mb-1">.00</span>
           </div>
-          <p className="text-[10px] font-medium text-brand-gray-muted text-right uppercase tracking-widest leading-tight">
-            Target <br />
-            <span className="text-brand-black font-black">₹{goal.targetAmount.toLocaleString('en-IN')}</span>
-          </p>
+          <div className="text-right">
+            <p className="text-[10px] font-black text-brand-gray-muted uppercase tracking-[0.3em] mb-1">Target</p>
+            <p className="text-lg font-display font-bold text-brand-black tracking-tight">₹{goal.targetAmount.toLocaleString('en-IN')}</p>
+          </div>
         </div>
 
         <div className="relative pt-2">
-          <div className="h-3 bg-brand-gray-light rounded-full overflow-hidden shadow-inner">
+          <div className="h-4 bg-brand-gray-light rounded-full overflow-hidden border border-brand-gray-light/50">
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(progress, 100)}%` }}
-              transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
               className={cn(
-                "h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(0,0,0,0.15)]",
-                progress >= 100 ? "bg-green-500" : "bg-brand-black"
+                "h-full rounded-full shadow-[0_0_30px_rgba(0,0,0,0.1)]",
+                progress >= 100 ? "bg-green-500 shadow-green-500/20" : "bg-brand-black"
               )}
             >
-              <div className="w-full h-full bg-gradient-to-r from-transparent to-white/10" />
+              <div className="w-full h-full bg-gradient-to-r from-transparent via-white/5 to-white/10" />
             </motion.div>
           </div>
           
-          <div className="flex justify-between items-center mt-4 px-1">
-            <span className="text-[10px] font-black text-brand-black uppercase tracking-[0.2em]">
-              {progress.toFixed(1)}% Secured
-            </span>
-            <span className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.2em]">
-              Gap: ₹{remaining.toLocaleString('en-IN')}
+          <div className="flex justify-between items-center mt-5 px-1">
+            <div className="flex items-center gap-2">
+              <div className={cn("w-2 h-2 rounded-full", progress >= 100 ? "bg-green-500 animate-pulse" : "bg-brand-black")} />
+              <span className="text-[11px] font-black text-brand-black uppercase tracking-[0.2em]">
+                {progress.toFixed(0)}% Secured
+              </span>
+            </div>
+            <span className="text-[11px] font-bold text-brand-gray-muted uppercase tracking-[0.2em]">
+              ₹{remaining.toLocaleString('en-IN')} Left
             </span>
           </div>
         </div>
@@ -165,19 +168,28 @@ function GoalCard({ goal, onUpdate, onDelete }: GoalCardProps) {
       <div className="mt-10 space-y-5 pt-8 border-t border-brand-gray-light/50">
         <div className="flex gap-4">
           <button 
-            onClick={() => onUpdate(goal.id, 500)}
+            onClick={() => {
+              sound.playClick();
+              onUpdate(goal.id, 500);
+            }}
             className="flex-1 h-16 bg-brand-gray-light hover:bg-brand-black hover:text-white rounded-[24px] text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 group/btn shadow-sm active:scale-95"
           >
             <span className="group-hover/btn:scale-110 transition-transform inline-block">+ ₹500</span>
           </button>
           <button 
-            onClick={() => onUpdate(goal.id, 1000)}
+            onClick={() => {
+              sound.playClick();
+              onUpdate(goal.id, 1000);
+            }}
             className="flex-1 h-16 bg-brand-gray-light hover:bg-brand-black hover:text-white rounded-[24px] text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 group/btn shadow-sm active:scale-95"
           >
             <span className="group-hover/btn:scale-110 transition-transform inline-block">+ ₹1.0K</span>
           </button>
           <button 
-            onClick={() => setShowBonus(!showBonus)}
+            onClick={() => {
+              sound.playClick();
+              setShowBonus(!showBonus);
+            }}
             className={cn(
               "flex-1 h-16 rounded-[24px] text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-2 active:scale-95 shadow-sm border",
               showBonus 

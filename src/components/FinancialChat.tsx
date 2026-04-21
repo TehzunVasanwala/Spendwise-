@@ -1,17 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, X, Bot, User, Loader2, Sparkles } from 'lucide-react';
-import { ChatMessage, Expense, Income, Budget } from '../types';
+import { ChatMessage, Expense, Income, Budget, SavingsGoal } from '../types';
 import { getFinancialChatResponse } from '../services/geminiService';
 import { cn } from '../lib/utils';
+import { sound } from '../services/soundService';
 
 interface FinancialChatProps {
   expenses: Expense[];
   income: Income[];
   budget: Budget;
+  goals: SavingsGoal[];
 }
 
-export default function FinancialChat({ expenses, income, budget }: FinancialChatProps) {
+export default function FinancialChat({ expenses, income, budget, goals }: FinancialChatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -27,6 +29,7 @@ export default function FinancialChat({ expenses, income, budget }: FinancialCha
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
+    sound.playClick();
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
@@ -39,7 +42,7 @@ export default function FinancialChat({ expenses, income, budget }: FinancialCha
     setIsLoading(true);
 
     try {
-      const response = await getFinancialChatResponse(input, messages, { expenses, income, budget });
+      const response = await getFinancialChatResponse(input, messages, { expenses, income, budget, goals });
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -58,7 +61,10 @@ export default function FinancialChat({ expenses, income, budget }: FinancialCha
     <>
       {/* Trigger Button */}
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          sound.playClick();
+          setIsOpen(true);
+        }}
         className="fixed bottom-32 sm:bottom-36 left-4 sm:left-6 w-12 h-12 sm:w-14 sm:h-14 bg-brand-black text-white rounded-[18px] sm:rounded-[20px] shadow-[0_20px_40px_rgba(0,0,0,0.3)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 group"
       >
         <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 group-hover:rotate-12 transition-transform duration-500" />

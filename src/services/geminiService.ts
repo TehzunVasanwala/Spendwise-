@@ -1,4 +1,4 @@
-import { Category, Expense, Income, Budget, SpendingPrediction, FinancialInsight, ChatMessage } from "../types";
+import { Category, Expense, Income, Budget, SpendingPrediction, FinancialInsight, ChatMessage, SavingsGoal } from "../types";
 import { GoogleGenAI, Type } from "@google/genai";
 
 // Initialize Gemini SDK lazily to ensure environment variables are present
@@ -160,11 +160,11 @@ export async function getFinancialAdvice(expenses: Expense[], income: Income[], 
 export async function getFinancialChatResponse(
   message: string, 
   history: ChatMessage[], 
-  context: { expenses: Expense[], income: Income[], budget: Budget }
+  context: { expenses: Expense[], income: Income[], budget: Budget, goals: SavingsGoal[] }
 ): Promise<string> {
   try {
     const ai = getAI();
-    const { expenses, income, budget } = context;
+    const { expenses, income, budget, goals } = context;
     
     const systemPrompt = `You are SpendWise AI, a friendly and accurate personal finance assistant. 
     You have access to the user's financial data to answer questions.
@@ -174,11 +174,13 @@ export async function getFinancialChatResponse(
     - Total Income (Current): ₹${income.reduce((s, i) => s + i.amount, 0)}
     - Budget Limit: ₹${budget.monthlyLimit}
     - Recent Expenses: ${JSON.stringify(expenses.slice(-20))}
+    - Savings Goals: ${goals.map(g => `${g.name}: ₹${g.currentAmount}/₹${g.targetAmount}`).join(', ')}
     
     GUIDELINES:
     - If user asks about spending (e.g., "How much on food?"), calculate it from the context.
     - If they ask for advice, be professional and encouraging.
     - Keep responses concise and use emojis.
+    - If they ask about future goals, refer to the "Savings Goals" provided.
     - If you don't have enough data to answer specifically, say so.`;
 
     const chatHistory = history.map(msg => ({
@@ -246,5 +248,69 @@ export async function suggestBudgetDistribution(totalLimit: number, categories: 
       acc[cat] = equalShare;
       return acc;
     }, {} as Record<string, number>);
+  }
+}
+
+export async function parseTransactionsFromText(text: string, availableCategories: string[]): Promise<{ expenses: Partial<Expense>[], income: Partial<Income>[] }> {
+  try {
+    const ai = getAI();
+    const prompt = `Extract all financial transactions from the following raw text (this is likely from a Google Pay activity history or bank statement). 
+    
+    TEXT:
+    """
+    ${text}
+    """
+    
+    RULES:
+    1. Distinguish between Expenses (money going out) and Income (money coming in/refunds).
+    2. For each transaction, extract: amount, description, and date (ISO string if possible, or relative to today).
+    3. Categorize Expenses into exactly one of these categories: ${availableCategories.join(', ')}.
+    4. If a transaction is unclear, ignore it.
+    
+    Return a JSON object with two arrays: 'expenses' and 'income'.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            expenses: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  amount: { type: Type.NUMBER },
+                  description: { type: Type.STRING },
+                  category: { type: Type.STRING, enum: availableCategories },
+                  date: { type: Type.STRING, description: "ISO 8601 string" }
+                },
+                required: ["amount", "description", "category", "date"]
+              }
+            },
+            income: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  amount: { type: Type.NUMBER },
+                  description: { type: Type.STRING },
+                  date: { type: Type.STRING, description: "ISO 8601 string" }
+                },
+                required: ["amount", "description", "date"]
+              }
+            }
+          },
+          required: ["expenses", "income"]
+        }
+      }
+    });
+
+    return JSON.parse(response.text);
+  } catch (error) {
+    console.error("Error parsing transactions from text:", error);
+    return { expenses: [], income: [] };
   }
 }

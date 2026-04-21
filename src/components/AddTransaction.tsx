@@ -5,6 +5,7 @@ import { Category, Expense, Income } from '../types';
 import { categorizeExpense } from '../services/geminiService';
 import { cn } from '../lib/utils';
 import { CATEGORY_UI } from '../lib/constants';
+import { sound } from '../services/soundService';
 
 interface AddTransactionProps {
   onClose: () => void;
@@ -31,6 +32,7 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
 
   const handleAutoCategorize = async () => {
     if (!description || type === 'income' || categories.length === 0) return;
+    sound.playClick();
     setIsCategorizing(true);
     const suggestedCategory = await categorizeExpense(description, categories);
     setCategory(suggestedCategory);
@@ -51,8 +53,10 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
 
   const handleNext = () => {
     if (step === 1 && amount) {
+      sound.playClick();
       setStep(2);
     } else if (step === 2) {
+      sound.playClick();
       handleSubmit();
     }
   };

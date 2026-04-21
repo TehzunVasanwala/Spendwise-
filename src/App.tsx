@@ -23,11 +23,13 @@ import SavingsGoals from './components/SavingsGoals';
 import AddTransaction from './components/AddTransaction';
 import AddGoal from './components/AddGoal';
 import Insights from './components/Insights';
+import SmartImporter from './components/SmartImporter';
 import BudgetSettings from './components/BudgetSettings';
 import Bills from './components/Bills';
 import FinancialChat from './components/FinancialChat';
 import { BrainCircuit, Calendar as CalendarIcon } from 'lucide-react';
 import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './firebase';
+import { sound } from './services/soundService';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { 
   collection, 
@@ -48,6 +50,7 @@ export default function App() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'expenses' | 'goals' | 'bills' | 'insights' | 'settings'>('dashboard');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSmartImporterOpen, setIsSmartImporterOpen] = useState(false);
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -276,6 +279,7 @@ export default function App() {
           userId: user.uid
         };
         await addDoc(collection(db, 'expenses'), newExpense);
+        sound.playSpend();
       } else {
         const newIncome = {
           amount: data.amount,
@@ -284,6 +288,7 @@ export default function App() {
           userId: user.uid
         };
         await addDoc(collection(db, 'income'), newIncome);
+        sound.playIncome();
       }
       setIsAddModalOpen(false);
       setIsQuickAddOpen(false);
@@ -349,6 +354,7 @@ export default function App() {
       if (goal) {
         // Update the goal's current amount
         await updateDoc(doc(db, 'goals', id), { currentAmount: goal.currentAmount + amount });
+        sound.playIncome();
         
         // Deduction from account balance: Create an expense transaction for the contribution
         if (amount > 0) {
@@ -419,6 +425,34 @@ export default function App() {
       setActiveTab('dashboard');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `budgets/${user.uid}`);
+    }
+  };
+
+  const handleSmartImport = async (importedExpenses: Partial<Expense>[], importedIncome: Partial<Income>[]) => {
+    if (!user) return;
+    try {
+      const batch = [];
+      
+      for (const exp of importedExpenses) {
+        batch.push(addDoc(collection(db, 'expenses'), {
+          ...exp,
+          userId: user.uid,
+          date: exp.date || new Date().toISOString()
+        }));
+      }
+      
+      for (const inc of importedIncome) {
+        batch.push(addDoc(collection(db, 'income'), {
+          ...inc,
+          userId: user.uid,
+          date: inc.date || new Date().toISOString()
+        }));
+      }
+      
+      await Promise.all(batch);
+      sound.playIncome();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'bulk-import');
     }
   };
 
@@ -593,6 +627,7 @@ export default function App() {
                     onManageBills={() => setActiveTab('bills')}
                     onUpdateBudget={updateBudget}
                     onNavigate={setActiveTab}
+                    onSync={() => setIsSmartImporterOpen(true)}
                     showInstallBtn={showInstallBtn}
                     onInstall={handleInstall}
                   />
@@ -695,7 +730,10 @@ export default function App() {
               {/* Central Action Button */}
               <div className="relative -top-3">
                 <button 
-                  onClick={() => setIsAddModalOpen(true)}
+                  onClick={() => {
+                    sound.playClick();
+                    setIsAddModalOpen(true);
+                  }}
                   className="w-16 h-16 bg-brand-black text-white rounded-[24px] shadow-[0_20px_40px_rgba(0,0,0,0.3)] flex items-center justify-center active:scale-90 transition-all hover:scale-105 border-4 border-white"
                   aria-label="Add Transaction"
                 >
@@ -722,6 +760,7 @@ export default function App() {
             expenses={expenses}
             income={income}
             budget={budget}
+            goals={goals}
           />
 
           {/* Add Transaction Modal */}
@@ -730,6 +769,17 @@ export default function App() {
               <AddTransaction 
                 onClose={() => setIsAddModalOpen(false)} 
                 onAdd={addTransaction} 
+                categories={Object.keys(budget.categories)}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Smart Importer Modal */}
+          <AnimatePresence>
+            {isSmartImporterOpen && (
+              <SmartImporter 
+                onClose={() => setIsSmartImporterOpen(false)}
+                onImport={handleSmartImport}
                 categories={Object.keys(budget.categories)}
               />
             )}
@@ -751,9 +801,14 @@ export default function App() {
 }
 
 function NavButton({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: React.ReactNode, label: string }) {
+  const handleClick = () => {
+    sound.playClick();
+    onClick();
+  };
+
   return (
     <button 
-      onClick={onClick}
+      onClick={handleClick}
       className={cn(
         "flex-1 flex flex-col items-center justify-center gap-1 transition-all duration-300 relative h-14 sm:h-16 outline-none",
         active ? "text-brand-black" : "text-brand-gray-muted"

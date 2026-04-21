@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Calendar, CheckCircle2, Circle, Trash2, Plus, AlertCircle } from 'lucide-react';
 import { Bill, Category } from '../types';
 import { db, handleFirestoreError, OperationType } from '../firebase';
+import { sound } from '../services/soundService';
 import { collection, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { cn } from '../lib/utils';
 
@@ -36,6 +37,7 @@ export default function Bills({ bills, userId, categories, onToggle, onDelete }:
         isPaid: false,
         userId: userId
       });
+      sound.playClick();
       setNewBill({
         name: '',
         amount: '',
@@ -70,15 +72,33 @@ export default function Bills({ bills, userId, categories, onToggle, onDelete }:
       </div>
 
       {unpaidTotal > 0 && (
-        <div className="bg-brand-black text-white rounded-3xl p-6 flex items-center justify-between relative overflow-hidden group">
-          <div className="relative z-10">
-            <p className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.2em] mb-1 px-1">Unfiltered Exposure</p>
-            <p className="text-3xl font-display font-bold text-white tracking-tight">₹{unpaidTotal.toLocaleString('en-IN')}</p>
+        <div className="bg-brand-black text-white rounded-[40px] p-10 flex flex-col gap-8 relative overflow-hidden group shadow-3xl">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-brand-gray-muted text-[10px] font-black uppercase tracking-[0.4em] mb-2 px-1">Unfiltered Exposure</p>
+              <h3 className="text-5xl font-display font-bold text-white tracking-tighter">₹{unpaidTotal.toLocaleString('en-IN')}</h3>
+            </div>
+            <div className="w-16 h-16 bg-white/10 rounded-[28px] flex items-center justify-center backdrop-blur-3xl border border-white/10">
+              <AlertCircle className="w-8 h-8 text-brand-accent animate-pulse" />
+            </div>
           </div>
-          <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
-            <AlertCircle className="w-6 h-6 text-brand-accent animate-pulse" />
+          
+          <div className="space-y-4 relative z-10 pt-4 border-t border-white/5">
+            <div className="flex justify-between items-center px-1">
+              <p className="text-[10px] font-black text-brand-gray-muted uppercase tracking-[0.3em]">Settlement Index</p>
+              <p className="text-[11px] font-display font-bold text-brand-accent">
+                {bills.filter(b => b.isPaid).length} of {bills.length} Settled
+              </p>
+            </div>
+            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${(bills.filter(b => b.isPaid).length / bills.length) * 100}%` }}
+                className="h-full bg-brand-accent shadow-glow"
+              />
+            </div>
           </div>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full blur-3xl -mr-10 -mt-10" />
+          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-brand-accent/5 rounded-full blur-[100px] -mr-40 -mt-40" />
         </div>
       )}
 
@@ -218,7 +238,10 @@ export default function Bills({ bills, userId, categories, onToggle, onDelete }:
                 <span className="text-[10px] font-bold text-brand-gray-muted">.00</span>
               </div>
               <button
-                onClick={() => onToggle(bill.id)}
+                onClick={() => {
+                  sound.playClick();
+                  onToggle(bill.id);
+                }}
                 className={cn(
                   "flex items-center gap-2 px-5 p-3 rounded-2xl text-[10px] font-bold uppercase tracking-[0.1em] transition-all active:scale-95 shadow-lg",
                   bill.isPaid 
