@@ -29,6 +29,8 @@ interface DashboardProps {
   onSync?: () => void;
   showInstallBtn?: boolean;
   onInstall?: () => void;
+  selectedDate: Date;
+  onDateChange: (date: Date) => void;
 }
 
 const COLORS = {
@@ -61,9 +63,10 @@ export default function Dashboard({
   onNavigate,
   onSync,
   showInstallBtn,
-  onInstall
+  onInstall,
+  selectedDate,
+  onDateChange
 }: DashboardProps) {
-  const [selectedDate, setSelectedDate] = useState(new Date());
   const [isEditingSalary, setIsEditingSalary] = useState(false);
   const [isEditingLimit, setIsEditingLimit] = useState(false);
   const [tempSalary, setTempSalary] = useState(budget.salary?.toString() || '');
@@ -138,12 +141,12 @@ export default function Dashboard({
 
   const handlePrevMonth = () => {
     sound.playClick();
-    setSelectedDate(subMonths(selectedDate, 1));
+    onDateChange(subMonths(selectedDate, 1));
   };
   
   const handleNextMonth = () => {
     sound.playClick();
-    setSelectedDate(addMonths(selectedDate, 1));
+    onDateChange(addMonths(selectedDate, 1));
   };
 
   const getCategoryColor = (category: string) => {

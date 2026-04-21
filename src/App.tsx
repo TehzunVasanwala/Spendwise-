@@ -53,6 +53,7 @@ export default function App() {
   const [isSmartImporterOpen, setIsSmartImporterOpen] = useState(false);
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBtn, setShowInstallBtn] = useState(false);
   const [userStats, setUserStats] = useState<UserStats>({
@@ -91,8 +92,22 @@ export default function App() {
     { id: 'p4', name: 'Grocery', amount: 2000, category: 'Food', icon: '🛒' }
   ]);
 
-  const totalSpent = useMemo(() => expenses.reduce((sum, e) => sum + e.amount, 0), [expenses]);
-  const totalIncome = useMemo(() => income.reduce((sum, i) => sum + i.amount, 0), [income]);
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter(e => {
+      const d = new Date(e.date);
+      return d.getMonth() === selectedDate.getMonth() && d.getFullYear() === selectedDate.getFullYear();
+    });
+  }, [expenses, selectedDate]);
+
+  const filteredIncome = useMemo(() => {
+    return income.filter(i => {
+      const d = new Date(i.date);
+      return d.getMonth() === selectedDate.getMonth() && d.getFullYear() === selectedDate.getFullYear();
+    });
+  }, [income, selectedDate]);
+
+  const totalSpent = useMemo(() => filteredExpenses.reduce((sum, e) => sum + e.amount, 0), [filteredExpenses]);
+  const totalIncome = useMemo(() => filteredIncome.reduce((sum, i) => sum + i.amount, 0), [filteredIncome]);
   const netFlow = useMemo(() => (budget.salary || totalIncome) - totalSpent, [budget.salary, totalIncome, totalSpent]);
 
   // Auth Listener
@@ -357,6 +372,15 @@ export default function App() {
       await deleteDoc(doc(db, 'expenses', id));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `expenses/${id}`);
+    }
+  };
+
+  const deleteIncome = async (id: string) => {
+    if (!user) return;
+    try {
+      await deleteDoc(doc(db, 'income', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `income/${id}`);
     }
   };
 
@@ -660,6 +684,8 @@ export default function App() {
                     goals={goals} 
                     bills={bills}
                     presets={presets}
+                    selectedDate={selectedDate}
+                    onDateChange={setSelectedDate}
                     onQuickAdd={addFromPreset}
                     onToggleBill={toggleBillPaid}
                     onManageBills={() => setActiveTab('bills')}
@@ -680,7 +706,14 @@ export default function App() {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <ExpenseList expenses={expenses} onDelete={deleteExpense} />
+                  <ExpenseList 
+                    expenses={filteredExpenses} 
+                    income={filteredIncome}
+                    onDeleteExpense={deleteExpense} 
+                    onDeleteIncome={deleteIncome}
+                    selectedDate={selectedDate}
+                    onDateChange={setSelectedDate}
+                  />
                 </motion.div>
               )}
 
@@ -727,7 +760,13 @@ export default function App() {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Insights expenses={expenses} income={income} budget={budget} userStats={userStats} />
+                  <Insights 
+                    expenses={filteredExpenses} 
+                    income={filteredIncome} 
+                    budget={budget} 
+                    userStats={userStats} 
+                    selectedDate={selectedDate}
+                  />
                 </motion.div>
               )}
 

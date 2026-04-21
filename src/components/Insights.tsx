@@ -4,15 +4,17 @@ import { Sparkles, Loader2, BrainCircuit, TrendingUp, TrendingDown, Flame, Troph
 import { Expense, Income, Budget, UserStats, SpendingPrediction, FinancialInsight } from '../types';
 import { getFinancialAdvice, getSpendingPrediction } from '../services/geminiService';
 import { cn } from '../lib/utils';
+import { format } from 'date-fns';
 
 interface InsightsProps {
   expenses: Expense[];
   income: Income[];
   budget: Budget;
   userStats: UserStats;
+  selectedDate: Date;
 }
 
-export default function Insights({ expenses, income, budget, userStats }: InsightsProps) {
+export default function Insights({ expenses, income, budget, userStats, selectedDate }: InsightsProps) {
   const [insights, setInsights] = useState<FinancialInsight[]>([]);
   const [prediction, setPrediction] = useState<SpendingPrediction | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -57,10 +59,13 @@ export default function Insights({ expenses, income, budget, userStats }: Insigh
       <div className="flex items-center justify-between px-1">
         <div>
           <h2 className="text-3xl font-display font-bold tracking-tight text-brand-black">Intelligence</h2>
-          <p className="text-[10px] text-brand-gray-muted font-bold uppercase tracking-[0.2em] mt-1.5 flex items-center gap-1.5">
-            <Sparkles className="w-3 h-3 text-brand-accent animate-pulse" />
-            Gemini 3.0 Analysis
-          </p>
+          <div className="flex items-center gap-2 mt-1.5">
+            <p className="text-[10px] text-brand-gray-muted font-bold uppercase tracking-[0.2em] flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3 text-brand-accent animate-pulse" />
+              Gemini 3.0 Analysis
+            </p>
+            <span className="text-[8px] font-black bg-brand-black text-white px-2 py-0.5 rounded-md uppercase tracking-widest">{format(selectedDate, 'MMM yyyy')}</span>
+          </div>
         </div>
         <button 
           onClick={fetchData}

@@ -263,11 +263,13 @@ export async function parseTransactionsFromText(text: string, availableCategorie
     
     RULES:
     1. Distinguish between Expenses (money going out) and Income (money coming in/refunds).
-    2. For each transaction, extract: amount, description, and date.
-    3. The DATE must be converted to an ISO 8601 string (e.g., 2024-05-20T00:00:00.000Z). If time is not available, default to 12:00 PM on that date.
-    4. Categorize Expenses into exactly one of these categories: ${availableCategories.join(', ')}.
-    5. Clean up descriptions (e.g., remove "Payment to", "Received from").
-    6. If a transaction is unclear or incomplete, ignore it.
+    2. IN INCOME: Look for keywords like "Received from", "Refunded", "Credit", "Cashback", "Added to balance", or positive numbers.
+    3. IN EXPENSES: Look for keywords like "Paid to", "Sent to", "Debit", "Payment to", or negative numbers.
+    4. For each transaction, extract: amount, description, and date.
+    5. The DATE must be converted to an ISO 8601 string (e.g., 2026-04-21T12:00:00.000Z). Use the actual year from the text or 2026 if not specified.
+    6. Categorize Expenses into exactly one of these categories: ${availableCategories.join(', ')}.
+    7. Clean up descriptions (e.g., remove "Payment to", "Received from", "UPI Transaction ID", etc.).
+    8. If a transaction is unclear or incomplete, ignore it.
     
     Return a JSON object with two arrays: 'expenses' and 'income'.`;
 
