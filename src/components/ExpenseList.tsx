@@ -14,7 +14,9 @@ export default function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
     return CATEGORY_UI[category as keyof typeof CATEGORY_UI] || CATEGORY_UI.Other;
   };
 
-  const groupedExpenses = expenses.reduce((groups, expense) => {
+  const sortedExpenses = [...expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const groupedExpenses = sortedExpenses.reduce((groups, expense) => {
     const date = format(new Date(expense.date), 'MMM dd, yyyy');
     if (!groups[date]) groups[date] = [];
     groups[date].push(expense);
@@ -41,7 +43,9 @@ export default function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
         </div>
       ) : (
         <div className="space-y-8">
-          {Object.entries(groupedExpenses).map(([date, items]) => (
+          {Object.entries(groupedExpenses)
+            .sort((a, b) => new Date(b[1][0].date).getTime() - new Date(a[1][0].date).getTime())
+            .map(([date, items]) => (
             <div key={date} className="space-y-4">
               <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-gray-muted px-4">{date}</h3>
               <div className="neo-card overflow-hidden">

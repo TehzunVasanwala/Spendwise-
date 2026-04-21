@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { 
   PieChart, 
@@ -23,6 +23,8 @@ interface DashboardProps {
   onQuickAdd: (preset: QuickPreset) => void;
   onToggleBill: (id: string) => void;
   onManageBills: () => void;
+  onUpdateBudget?: (budget: Budget) => void;
+  onNavigate?: (tab: string) => void;
   showInstallBtn?: boolean;
   onInstall?: () => void;
 }
@@ -53,16 +55,29 @@ export default function Dashboard({
   onQuickAdd, 
   onToggleBill,
   onManageBills,
+  onUpdateBudget,
+  onNavigate,
   showInstallBtn,
   onInstall
 }: DashboardProps) {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isEditingSalary, setIsEditingSalary] = useState(false);
+  const [isEditingLimit, setIsEditingLimit] = useState(false);
+  const [tempSalary, setTempSalary] = useState(budget.salary?.toString() || '');
+  const [tempLimit, setTempLimit] = useState(budget.monthlyLimit?.toString() || '');
+
+  useEffect(() => {
+    setTempSalary(budget.salary?.toString() || '');
+    setTempLimit(budget.monthlyLimit?.toString() || '');
+  }, [budget.salary, budget.monthlyLimit]);
 
   const filteredExpenses = useMemo(() => {
-    return expenses.filter(e => {
-      const d = new Date(e.date);
-      return isSameMonth(d, selectedDate);
-    });
+    return expenses
+      .filter(e => {
+        const d = new Date(e.date);
+        return isSameMonth(d, selectedDate);
+      })
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [expenses, selectedDate]);
 
   const filteredIncome = useMemo(() => {
@@ -125,14 +140,30 @@ export default function Dashboard({
     return COLORS[category as keyof typeof COLORS] || '#999';
   };
 
+  const handleUpdateSalary = () => {
+    const newSalary = parseFloat(tempSalary);
+    if (!isNaN(newSalary) && onUpdateBudget) {
+      onUpdateBudget({ ...budget, salary: newSalary });
+      setIsEditingSalary(false);
+    }
+  };
+
+  const handleUpdateLimit = () => {
+    const newLimit = parseFloat(tempLimit);
+    if (!isNaN(newLimit) && onUpdateBudget) {
+      onUpdateBudget({ ...budget, monthlyLimit: newLimit });
+      setIsEditingLimit(false);
+    }
+  };
+
   return (
-    <div className="space-y-6 sm:space-y-8 pb-32">
+    <div className="space-y-6 sm:space-y-10 pb-32">
       {/* PWA Install Banner */}
       {showInstallBtn && (
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-brand-black text-white rounded-[32px] sm:rounded-4xl p-5 flex items-center justify-between shadow-2xl relative overflow-hidden"
+          className="bg-brand-black text-white rounded-[32px] sm:rounded-[40px] p-6 flex items-center justify-between shadow-2xl relative overflow-hidden ring-1 ring-white/10"
         >
           <div className="flex items-center gap-4 relative z-10">
             <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
@@ -176,16 +207,16 @@ export default function Dashboard({
       </div>
 
       {/* Summary Card */}
-      <div className="bg-brand-black text-white rounded-4xl p-6 sm:p-10 shadow-[0_40px_100px_rgba(0,0,0,0.15)] relative overflow-hidden group">
+      <div className="bg-brand-black text-white rounded-[40px] p-7 sm:p-10 shadow-[0_40px_100px_rgba(0,0,0,0.3)] relative overflow-hidden group border border-white/5">
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 sm:gap-0 mb-10 sm:mb-12">
             <div>
-              <p className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.3em] mb-2 sm:mb-3 px-1">Disposable Velocity</p>
-              <h2 className="text-3xl sm:text-5xl font-display font-bold tracking-tighter leading-none whitespace-nowrap">₹{netFlow.toLocaleString('en-IN')}</h2>
+              <p className="text-brand-gray-muted text-[10px] font-black uppercase tracking-[0.3em] mb-2 sm:mb-4 px-1 opacity-40">Bank Balance</p>
+              <h2 className="text-4xl sm:text-6xl font-display font-bold tracking-tighter leading-none whitespace-nowrap drop-shadow-2xl">₹{netFlow.toLocaleString('en-IN')}</h2>
             </div>
             <div className={cn(
-              "backdrop-blur-2xl px-5 py-2.5 rounded-2xl flex items-center gap-2 border shadow-lg transition-transform duration-500 hover:scale-105 shrink-0",
-              isOverBudget ? "bg-red-500/10 border-red-500/20" : "bg-white/5 border-white/10"
+              "backdrop-blur-3xl px-6 py-3 rounded-2xl flex items-center gap-2.5 border shadow-2xl transition-all duration-500 hover:scale-105 shrink-0",
+              isOverBudget ? "bg-red-500/20 border-red-500/30" : "bg-white/10 border-white/10"
             )}>
               {isOverBudget ? (
                 <>
@@ -201,14 +232,71 @@ export default function Dashboard({
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-6 sm:gap-12 mb-8 sm:mb-12">
-            <div>
-              <p className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.2em] mb-2 px-1">Total Inflow</p>
-              <p className="text-xl sm:text-2xl font-display font-bold text-white tracking-tight">₹{totalIncome.toLocaleString('en-IN')}</p>
+          <div className="grid grid-cols-2 gap-8 sm:gap-14 mb-10 sm:mb-14 px-1">
+            <div className="group/item">
+              <div className="flex items-center gap-2 mb-3">
+                <p className="text-brand-gray-muted text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Total Inflow</p>
+                <button 
+                  onClick={() => setIsEditingSalary(!isEditingSalary)}
+                  className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors active:scale-90"
+                >
+                  <ReceiptText className="w-3 h-3 text-brand-accent shadow-glow" />
+                </button>
+              </div>
+              {isEditingSalary ? (
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="number"
+                    inputMode="decimal"
+                    value={tempSalary}
+                    onChange={(e) => setTempSalary(e.target.value)}
+                    onBlur={handleUpdateSalary}
+                    onKeyDown={(e) => e.key === 'Enter' && handleUpdateSalary()}
+                    className="w-full bg-white/10 border border-white/5 rounded-xl px-3 py-2 text-lg font-display font-bold text-white outline-none focus:ring-1 focus:ring-brand-accent transition-all"
+                    autoFocus
+                  />
+                </div>
+              ) : (
+                <p className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight leading-tight">₹{effectiveIncome.toLocaleString('en-IN')}</p>
+              )}
             </div>
-            <div>
-              <p className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.2em] mb-2 px-1">Monthly Outflow</p>
-              <p className="text-xl sm:text-2xl font-display font-bold text-brand-gray-muted tracking-tight">₹{totalSpent.toLocaleString('en-IN')}</p>
+            <div className="group/item">
+              <div className="flex items-center gap-2 mb-3">
+                <p className="text-brand-gray-muted text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Monthly Outflow</p>
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={() => setIsEditingLimit(!isEditingLimit)}
+                    className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors active:scale-90"
+                  >
+                    <ReceiptText className="w-3 h-3 text-brand-accent shadow-glow" />
+                  </button>
+                  <button 
+                    onClick={() => onNavigate?.('expenses')}
+                    className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors active:scale-90"
+                  >
+                    <ArrowDownRight className="w-3 h-3 text-brand-gray-muted rotate-180" />
+                  </button>
+                </div>
+              </div>
+              {isEditingLimit ? (
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="number"
+                    inputMode="decimal"
+                    value={tempLimit}
+                    onChange={(e) => setTempLimit(e.target.value)}
+                    onBlur={handleUpdateLimit}
+                    onKeyDown={(e) => e.key === 'Enter' && handleUpdateLimit()}
+                    className="w-full bg-white/10 border border-white/5 rounded-xl px-3 py-2 text-lg font-display font-bold text-white outline-none focus:ring-1 focus:ring-brand-accent transition-all"
+                    autoFocus
+                  />
+                </div>
+              ) : (
+                <div>
+                  <p className="text-2xl sm:text-3xl font-display font-bold text-brand-gray-muted tracking-tight leading-tight">₹{totalSpent.toLocaleString('en-IN')}</p>
+                  <p className="text-[9px] font-bold text-brand-gray-muted uppercase tracking-widest mt-1 opacity-40">Target: ₹{effectiveLimit.toLocaleString('en-IN')}</p>
+                </div>
+              )}
             </div>
           </div>
 

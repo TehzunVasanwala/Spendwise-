@@ -170,23 +170,6 @@ export default function App() {
       if (snapshot.exists()) {
         const data = snapshot.data() as Budget;
         setBudget(data);
-        // Auto-update old default (50k) to new default (40k) as requested
-        if (data.monthlyLimit === 50000) {
-          const updatedBudget: Budget = {
-            monthlyLimit: 40000,
-            categories: {
-              Food: 8000,
-              Transport: 4000,
-              Entertainment: 4000,
-              Shopping: 8000,
-              Utilities: 4000,
-              Health: 4000,
-              Other: 8000
-            },
-            userId: user.uid
-          };
-          setDoc(budgetDoc, updatedBudget).catch(e => handleFirestoreError(e, OperationType.WRITE, `budgets/${user.uid}`));
-        }
       } else {
         // Initialize default budget for new user
         const defaultBudget: Budget = {
@@ -608,6 +591,8 @@ export default function App() {
                     onQuickAdd={addFromPreset}
                     onToggleBill={toggleBillPaid}
                     onManageBills={() => setActiveTab('bills')}
+                    onUpdateBudget={updateBudget}
+                    onNavigate={setActiveTab}
                     showInstallBtn={showInstallBtn}
                     onInstall={handleInstall}
                   />
