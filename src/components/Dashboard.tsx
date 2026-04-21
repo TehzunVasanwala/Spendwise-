@@ -207,40 +207,44 @@ export default function Dashboard({
       </div>
 
       {/* Summary Card */}
-      <div className="bg-brand-black text-white rounded-[40px] p-7 sm:p-10 shadow-[0_40px_100px_rgba(0,0,0,0.3)] relative overflow-hidden group border border-white/5">
+      <motion.div 
+        whileHover={{ scale: 1.01 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        className="bg-brand-black text-white rounded-[44px] p-8 sm:p-11 shadow-[0_50px_120px_rgba(0,0,0,0.4)] relative overflow-hidden group border border-white/10"
+      >
         <div className="relative z-10">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 sm:gap-0 mb-10 sm:mb-12">
-            <div>
-              <p className="text-brand-gray-muted text-[10px] font-black uppercase tracking-[0.3em] mb-2 sm:mb-4 px-1 opacity-40">Bank Balance</p>
-              <h2 className="text-4xl sm:text-6xl font-display font-bold tracking-tighter leading-none whitespace-nowrap drop-shadow-2xl">₹{netFlow.toLocaleString('en-IN')}</h2>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 sm:gap-0 mb-12 sm:mb-16">
+            <div className="space-y-1">
+              <p className="text-brand-gray-muted text-[11px] font-black uppercase tracking-[0.4em] mb-3 px-1 opacity-40">Bank Balance</p>
+              <h2 className="text-5xl sm:text-7xl font-display font-bold tracking-tighter leading-none whitespace-nowrap drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">₹{netFlow.toLocaleString('en-IN')}</h2>
             </div>
             <div className={cn(
-              "backdrop-blur-3xl px-6 py-3 rounded-2xl flex items-center gap-2.5 border shadow-2xl transition-all duration-500 hover:scale-105 shrink-0",
-              isOverBudget ? "bg-red-500/20 border-red-500/30" : "bg-white/10 border-white/10"
+              "backdrop-blur-3xl px-7 py-3.5 rounded-[24px] flex items-center gap-3 border shadow-2xl transition-all duration-700 hover:bg-white/10 shrink-0",
+              isOverBudget ? "bg-red-500/20 border-red-500/30" : "bg-white/10 border-white/20"
             )}>
               {isOverBudget ? (
                 <>
-                  <AlertCircle className="w-4 h-4 text-red-400" />
-                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-400">Leakage</span>
+                  <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.5)]" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-red-400">Leakage</span>
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4 text-brand-accent shadow-glow" />
-                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-accent">Optimized</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-accent">Optimized</span>
                 </>
               )}
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-8 sm:gap-14 mb-10 sm:mb-14 px-1">
+          <div className="grid grid-cols-2 gap-10 sm:gap-20 mb-12 sm:mb-16 px-1">
             <div className="group/item">
-              <div className="flex items-center gap-2 mb-3">
-                <p className="text-brand-gray-muted text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Total Inflow</p>
+              <div className="flex items-center gap-3 mb-4">
+                <p className="text-brand-gray-muted text-[11px] font-black uppercase tracking-[0.3em] opacity-40">Total Inflow</p>
                 <button 
                   onClick={() => setIsEditingSalary(!isEditingSalary)}
-                  className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors active:scale-90"
+                  className="p-2 rounded-full bg-white/10 hover:bg-brand-accent transition-all active:scale-90"
                 >
-                  <ReceiptText className="w-3 h-3 text-brand-accent shadow-glow" />
+                  <ReceiptText className="w-3.5 h-3.5 text-white" />
                 </button>
               </div>
               {isEditingSalary ? (
@@ -252,29 +256,29 @@ export default function Dashboard({
                     onChange={(e) => setTempSalary(e.target.value)}
                     onBlur={handleUpdateSalary}
                     onKeyDown={(e) => e.key === 'Enter' && handleUpdateSalary()}
-                    className="w-full bg-white/10 border border-white/5 rounded-xl px-3 py-2 text-lg font-display font-bold text-white outline-none focus:ring-1 focus:ring-brand-accent transition-all"
+                    className="w-full bg-white/10 border border-white/10 rounded-2xl px-4 py-2.5 text-xl font-display font-bold text-white outline-none focus:ring-1 focus:ring-brand-accent transition-all"
                     autoFocus
                   />
                 </div>
               ) : (
-                <p className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight leading-tight">₹{effectiveIncome.toLocaleString('en-IN')}</p>
+                <p className="text-3xl sm:text-4xl font-display font-bold text-white tracking-tighter leading-tight">₹{effectiveIncome.toLocaleString('en-IN')}</p>
               )}
             </div>
             <div className="group/item">
-              <div className="flex items-center gap-2 mb-3">
-                <p className="text-brand-gray-muted text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Monthly Outflow</p>
-                <div className="flex items-center gap-1">
+              <div className="flex items-center gap-3 mb-4">
+                <p className="text-brand-gray-muted text-[11px] font-black uppercase tracking-[0.3em] opacity-40">Monthly Outflow</p>
+                <div className="flex items-center gap-1.5">
                   <button 
                     onClick={() => setIsEditingLimit(!isEditingLimit)}
-                    className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors active:scale-90"
+                    className="p-2 rounded-full bg-white/10 hover:bg-brand-accent transition-all active:scale-90"
                   >
-                    <ReceiptText className="w-3 h-3 text-brand-accent shadow-glow" />
+                    <ReceiptText className="w-3.5 h-3.5 text-white" />
                   </button>
                   <button 
                     onClick={() => onNavigate?.('expenses')}
-                    className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors active:scale-90"
+                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors active:scale-90"
                   >
-                    <ArrowDownRight className="w-3 h-3 text-brand-gray-muted rotate-180" />
+                    <ArrowDownRight className="w-3.5 h-3.5 text-brand-gray-muted rotate-180" />
                   </button>
                 </div>
               </div>
@@ -287,46 +291,46 @@ export default function Dashboard({
                     onChange={(e) => setTempLimit(e.target.value)}
                     onBlur={handleUpdateLimit}
                     onKeyDown={(e) => e.key === 'Enter' && handleUpdateLimit()}
-                    className="w-full bg-white/10 border border-white/5 rounded-xl px-3 py-2 text-lg font-display font-bold text-white outline-none focus:ring-1 focus:ring-brand-accent transition-all"
+                    className="w-full bg-white/10 border border-white/10 rounded-2xl px-4 py-2.5 text-xl font-display font-bold text-white outline-none focus:ring-1 focus:ring-brand-accent transition-all"
                     autoFocus
                   />
                 </div>
               ) : (
-                <div>
-                  <p className="text-2xl sm:text-3xl font-display font-bold text-brand-gray-muted tracking-tight leading-tight">₹{totalSpent.toLocaleString('en-IN')}</p>
-                  <p className="text-[9px] font-bold text-brand-gray-muted uppercase tracking-widest mt-1 opacity-40">Target: ₹{effectiveLimit.toLocaleString('en-IN')}</p>
+                <div className="space-y-1">
+                  <p className="text-3xl sm:text-4xl font-display font-bold text-brand-gray-muted tracking-tighter leading-tight">₹{totalSpent.toLocaleString('en-IN')}</p>
+                  <p className="text-[10px] font-black text-brand-gray-muted uppercase tracking-[0.2em] opacity-30">Goal: ₹{effectiveLimit.toLocaleString('en-IN')}</p>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="space-y-5">
-            <div className="flex justify-between items-end px-1">
-              <div>
-                <p className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5">Efficiency Rating</p>
-                <div className="flex gap-1">
+          <div className="space-y-6">
+            <div className="flex justify-between items-end px-2">
+              <div className="space-y-4">
+                <p className="text-brand-gray-muted text-[11px] font-black uppercase tracking-[0.3em] opacity-40">Efficiency Rating</p>
+                <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <div 
                       key={i} 
                       className={cn(
-                        "w-4 h-1.5 rounded-full transition-all duration-700",
-                        i <= Math.ceil((100 - percentSpent) / 20) ? "bg-brand-accent shadow-glow" : "bg-white/5"
+                        "w-6 h-2 rounded-full transition-all duration-1000",
+                        i <= Math.ceil((100 - Math.min(percentSpent, 100)) / 20) ? "bg-brand-accent shadow-glow" : "bg-white/10"
                       )}
                     />
                   ))}
                 </div>
               </div>
-              <span className="text-[10px] font-display font-bold text-brand-gray-muted uppercase tracking-widest">
+              <span className="text-[11px] font-display font-bold text-brand-accent uppercase tracking-widest drop-shadow-sm">
                 {percentSpent.toFixed(0)}% Exhausted
               </span>
             </div>
-            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+            <div className="h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(percentSpent, 100)}%` }}
-                transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
                 className={cn(
-                  "h-full rounded-full shadow-[0_0_20px_rgba(255,255,255,0.1)]",
+                  "h-full rounded-full shadow-[0_0_40px_rgba(255,255,255,0.15)]",
                   isOverBudget ? "bg-red-500" : "bg-white"
                 )}
               />
@@ -335,9 +339,9 @@ export default function Dashboard({
         </div>
         
         {/* Abstract artifacts */}
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-brand-accent/5 rounded-full blur-[120px] -mr-40 -mt-40 group-hover:bg-brand-accent/15 transition-all duration-1000" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-accent/10 rounded-full blur-[140px] -mr-60 -mt-60 group-hover:bg-brand-accent/20 transition-all duration-[5s] animate-pulse" />
         <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-white/[0.02] rounded-full blur-[100px] -ml-20 -mb-20" />
-      </div>
+      </motion.div>
 
       {/* Daily Allowance Widget */}
       <div className={cn(

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, X, Bot, User, Loader2, Sparkles } from 'lucide-react';
+import { ArrowRight, X, Bot, User, Loader2, Sparkles } from 'lucide-react';
 import { ChatMessage, Expense, Income, Budget } from '../types';
 import { getFinancialChatResponse } from '../services/geminiService';
 import { cn } from '../lib/utils';
@@ -155,10 +155,10 @@ export default function FinancialChat({ expenses, income, budget }: FinancialCha
                         {msg.role === 'user' ? <User className="w-5 h-5 text-white" /> : <Bot className="w-5 h-5 text-white" />}
                       </div>
                       <div className={cn(
-                        "max-w-[80%] p-6 rounded-[32px] text-[13px] font-medium leading-relaxed shadow-sm",
+                        "max-w-[85%] p-7 rounded-[40px] text-[15px] font-medium leading-relaxed shadow-sm",
                         msg.role === 'user' 
-                          ? "bg-brand-black text-white" 
-                          : "bg-brand-gray-light text-brand-black border border-brand-gray-light/50"
+                          ? "bg-brand-black text-white rounded-tr-none" 
+                          : "bg-brand-gray-light text-brand-black border border-brand-gray-light/50 rounded-tl-none whitespace-pre-wrap"
                       )}>
                         {msg.content}
                       </div>
@@ -182,26 +182,27 @@ export default function FinancialChat({ expenses, income, budget }: FinancialCha
               </div>
 
               {/* Input Area */}
-              <div className="p-8 bg-white border-t border-brand-gray-light shadow-[0_-20px_50px_rgba(0,0,0,0.02)]">
+              <div className="p-8 bg-white border-t border-brand-gray-light shadow-[0_-20px_60px_rgba(0,0,0,0.03)]">
                 <form 
                   onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-                  className="relative group"
+                  className="flex gap-4"
                 >
                   <input 
                     autoFocus
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Inquire about habits, limits, or streaks..."
-                    className="w-full bg-brand-gray-light/50 border-none rounded-[28px] py-5 pl-8 pr-16 text-sm font-bold focus:ring-2 focus:ring-brand-black transition-all outline-none placeholder:text-brand-gray-muted/50"
+                    placeholder="Ask SpendWise AI..."
+                    className="flex-1 bg-brand-gray-light/80 border-none rounded-[32px] py-6 px-8 text-[15px] font-display font-bold focus:ring-2 focus:ring-brand-black transition-all outline-none placeholder:text-brand-gray-muted/40"
                   />
                   <button
                     disabled={!input.trim() || isLoading}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-11 h-11 bg-brand-black text-white rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all disabled:opacity-10 shadow-lg"
+                    className="w-16 h-16 bg-brand-black text-white rounded-[24px] flex items-center justify-center hover:scale-105 active:scale-90 transition-all disabled:opacity-10 shadow-xl shrink-0"
                   >
-                    <Send className="w-4 h-4" />
+                    <ArrowRight className="w-6 h-6" />
                   </button>
                 </form>
+                <p className="text-[10px] text-brand-gray-muted text-center mt-6 font-black uppercase tracking-[0.3em] opacity-40">AI insights are indicative. Verify with records.</p>
               </div>
             </motion.div>
           </div>

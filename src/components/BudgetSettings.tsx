@@ -19,7 +19,9 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
   const [newCategoryLimit, setNewCategoryLimit] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [targetLimit, setTargetLimit] = useState(budget.monthlyLimit.toString());
-  const [salary, setSalary] = useState(budget.salary?.toString() || '50000');
+  const [salary, setSalary] = useState(budget.salary?.toString() || '');
+
+  const totalAllocated = Object.values(localBudget.categories).reduce((sum: number, limit: number) => sum + limit, 0);
 
   const handleAiDistribute = async () => {
     const limit = parseFloat(targetLimit);
@@ -67,10 +69,9 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
   };
 
   const handleSave = () => {
-    const totalLimit = Object.values(localBudget.categories).reduce((sum: number, limit: number) => sum + limit, 0);
     onUpdate({ 
       ...localBudget, 
-      monthlyLimit: totalLimit,
+      monthlyLimit: parseFloat(targetLimit) || totalAllocated,
       salary: parseFloat(salary) || 0
     });
   };
@@ -124,21 +125,39 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
 
         <div className="neo-card p-8 rounded-4xl space-y-10">
           <div>
+            <label className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.2em] mb-4 block px-1">Monthly Outflow Target</label>
+            <div className="relative border-b-2 border-brand-gray-light pb-2 focus-within:border-brand-black transition-colors mb-8">
+              <span className="absolute left-0 bottom-2 text-2xl font-display font-bold text-brand-gray-muted">₹</span>
+              <input 
+                type="number"
+                inputMode="decimal"
+                value={targetLimit}
+                onChange={(e) => setTargetLimit(e.target.value)}
+                className="w-full pl-8 bg-transparent text-3xl font-display font-bold outline-none placeholder:text-brand-gray-light font-mono"
+              />
+            </div>
+
             <label className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.2em] mb-4 block px-1">Primary Monthly Income</label>
             <div className="relative border-b-2 border-brand-gray-light pb-2 focus-within:border-brand-black transition-colors">
               <span className="absolute left-0 bottom-2 text-2xl font-display font-bold text-brand-gray-muted">₹</span>
               <input 
                 type="number"
+                inputMode="decimal"
                 value={salary}
                 onChange={(e) => setSalary(e.target.value)}
-                className="w-full pl-8 bg-transparent text-3xl font-display font-bold outline-none placeholder:text-brand-gray-light font-mono"
+                className="w-full pl-8 bg-transparent text-2xl font-display font-bold outline-none placeholder:text-brand-gray-light font-mono"
               />
             </div>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-6">
-              <label className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.2em] px-1">Strategic Allocation</label>
+              <div>
+                <label className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.2em] px-1">Categorical Allocation</label>
+                <p className="text-[9px] font-bold text-brand-accent uppercase tracking-widest mt-1 px-1">
+                  Total Allocated: ₹{totalAllocated.toLocaleString()}
+                </p>
+              </div>
               <button 
                 onClick={handleAiDistribute}
                 disabled={isAiLoading || !targetLimit}

@@ -61,24 +61,24 @@ export default function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
                     >
                       <div className="flex items-center gap-5">
                         <div className={cn(
-                          "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-500",
+                          "w-12 h-12 rounded-[18px] flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-500 ring-1 ring-white/10",
                           color
                         )}>
-                          <CategoryIcon className="w-5 h-5" />
+                          <CategoryIcon className="w-5 h-5 drop-shadow-sm" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-brand-black tracking-tight">{expense.description}</p>
-                          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-brand-gray-muted mt-1">{expense.category}</p>
+                          <p className="text-base font-display font-bold text-brand-black tracking-tight leading-tight">{expense.description}</p>
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gray-muted mt-1.5 opacity-60">{expense.category}</p>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-6">
-                        <span className="text-base font-display font-bold text-brand-black">₹{expense.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                      <div className="flex items-center gap-4 sm:gap-6">
+                        <span className="text-lg font-display font-bold text-brand-black tracking-tighter">₹{expense.amount.toLocaleString('en-IN')}</span>
                         <button 
                           onClick={() => onDelete(expense.id)}
-                          className="p-3 text-brand-gray-muted/20 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-300 sm:opacity-0 group-hover:opacity-100 opacity-100"
+                          className="w-10 h-10 flex items-center justify-center text-brand-gray-muted/30 hover:text-red-500 hover:bg-red-50 rounded-[14px] transition-all duration-300 active:scale-90"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-4.5 h-4.5" />
                         </button>
                       </div>
                     </div>
