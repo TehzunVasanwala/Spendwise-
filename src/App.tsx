@@ -470,16 +470,22 @@ export default function App() {
     try {
       const batch = [];
       
-      // Filter out duplicates (Match on amount, description, and date)
+      // Filter out duplicates (Match on amount, description, and normalized date)
       const isDuplicate = (t: Partial<Expense | Income>, existingList: (Expense | Income)[]) => {
         const tDate = t.date ? new Date(t.date) : null;
         if (!tDate || isNaN(tDate.getTime())) return false;
+        
+        // Normalize to date only for robust comparison (Midnight)
+        const normalizedTDate = new Date(tDate);
+        normalizedTDate.setHours(0, 0, 0, 0);
+        const tTime = normalizedTDate.getTime();
 
         return existingList.some(item => {
           const itemDate = new Date(item.date);
-          return item.amount === t.amount && 
+          itemDate.setHours(0, 0, 0, 0);
+          return Math.abs(item.amount - (t.amount || 0)) < 0.01 && 
             item.description.trim().toLowerCase() === t.description?.trim().toLowerCase() &&
-            itemDate.toDateString() === tDate.toDateString();
+            itemDate.getTime() === tTime;
         });
       };
 

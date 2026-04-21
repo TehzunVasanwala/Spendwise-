@@ -28,8 +28,8 @@ export default function Insights({ expenses, income, budget, userStats, selected
     
     try {
       const [insightsResult, predictionResult] = await Promise.all([
-        getFinancialAdvice(expenses, income, budget),
-        getSpendingPrediction(expenses, budget)
+        getFinancialAdvice(expenses, income, budget, selectedDate),
+        getSpendingPrediction(expenses, budget, selectedDate)
       ]);
       setInsights(insightsResult);
       setPrediction(predictionResult);
@@ -43,12 +43,9 @@ export default function Insights({ expenses, income, budget, userStats, selected
   };
 
   useEffect(() => {
-    // Auto-fetch when data is available and we haven't checked yet
-    const hasData = expenses.length > 5; // Require some minimal history
-    if (hasData && !hasInitialized && !isLoading) {
-      fetchData();
-    }
-  }, [expenses.length, hasInitialized]);
+    // Auto-fetch when month changes
+    fetchData();
+  }, [selectedDate]);
 
   const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
   const totalIncome = income.reduce((sum, i) => sum + i.amount, 0);

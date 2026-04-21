@@ -104,11 +104,14 @@ export default function SmartImporter({ onClose, onImport, categories, existingE
     const tDate = t.date ? new Date(t.date) : null;
     if (!tDate || isNaN(tDate.getTime())) return false;
 
+    // Normalize to date only for robust comparison
+    const normalizedTDate = new Date(tDate).setHours(0, 0, 0, 0);
+
     return existingList.some(item => {
-      const itemDate = new Date(item.date);
+      const itemDate = new Date(item.date).setHours(0, 0, 0, 0);
       return item.amount === t.amount && 
         item.description.trim().toLowerCase() === t.description?.trim().toLowerCase() &&
-        itemDate.toDateString() === tDate.toDateString();
+        itemDate === normalizedTDate;
     });
   };
 

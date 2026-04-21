@@ -45,21 +45,24 @@ export async function categorizeExpense(description: string, availableCategories
   }
 }
 
-export async function getSpendingPrediction(expenses: Expense[], budget: Budget): Promise<SpendingPrediction> {
+export async function getSpendingPrediction(expenses: Expense[], budget: Budget, selectedDate: Date = new Date()): Promise<SpendingPrediction> {
   try {
     const ai = getAI();
     const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
-    const today = new Date();
-    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-    const currentDay = today.getDate();
+    const daysInMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate();
     
-    const prompt = `Analyze these expenses and predict the end-of-month total.
-    - Current Day of Month: ${currentDay}/${daysInMonth}
+    // If exploring a past month, prediction is just the final total
+    const isPastMonth = selectedDate.getMonth() < new Date().getMonth() || selectedDate.getFullYear() < new Date().getFullYear();
+    const currentDay = isPastMonth ? daysInMonth : new Date().getDate();
+    const monthName = selectedDate.toLocaleString('default', { month: 'long' });
+    
+    const prompt = `Analyze financial data for ${monthName} ${selectedDate.getFullYear()}:
+    - Analysis Day: Day ${currentDay} of ${daysInMonth}
     - Monthly Budget Limit: ₹${budget.monthlyLimit}
     - Total Spent So Far: ₹${totalSpent}
-    - Recent Expenses: ${JSON.stringify(expenses.slice(-20))}
+    - Detailed Transactions: ${JSON.stringify(expenses.slice(-30))}
     
-    Predict if the user will exceed their budget and provide a helpful, concise recommendation.`;
+    Predict the final end-of-month total based on these spending habits and suggest if any major changes are needed.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
@@ -100,23 +103,24 @@ export async function getSpendingPrediction(expenses: Expense[], budget: Budget)
   }
 }
 
-export async function getFinancialAdvice(expenses: Expense[], income: Income[], budget: Budget): Promise<FinancialInsight[]> {
+export async function getFinancialAdvice(expenses: Expense[], income: Income[], budget: Budget, selectedDate: Date = new Date()): Promise<FinancialInsight[]> {
   try {
     const ai = getAI();
     const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
     const totalIncome = income.reduce((sum, i) => sum + i.amount, 0);
+    const monthName = selectedDate.toLocaleString('default', { month: 'long' });
     
     const categories = expenses.reduce((acc, e) => {
       acc[e.category] = (acc[e.category] || 0) + e.amount;
       return acc;
     }, {} as Record<string, number>);
 
-    const prompt = `You are an elite financial advisor. Analyze this data and provide 3-4 structured insights.
-    - Total Income: ₹${totalIncome}
-    - Total Expenses: ₹${totalSpent}
-    - Budget Limit: ₹${budget.monthlyLimit}
-    - Categories: ${JSON.stringify(categories)}
-    - Expenses: ${JSON.stringify(expenses.slice(-30))}
+    const prompt = `You are an elite financial advisor. Analyze data for ${monthName} ${selectedDate.getFullYear()}.
+    - Total Inflow: ₹${totalIncome}
+    - Total Outflow: ₹${totalSpent}
+    - Budget Target: ₹${budget.monthlyLimit}
+    - Category Breakdown: ${JSON.stringify(categories)}
+    - Transactions: ${JSON.stringify(expenses.slice(-40))}
 
     Look for:
     - Anomalies: Unusual amounts compared to typical category spend.

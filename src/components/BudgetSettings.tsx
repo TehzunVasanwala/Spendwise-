@@ -58,9 +58,12 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
 
   const handleAddCategory = () => {
     if (!newCategoryName || !newCategoryLimit) return;
+    const limit = parseFloat(newCategoryLimit);
+    if (isNaN(limit) || limit < 0) return;
+
     const updatedCategories = { 
       ...localBudget.categories, 
-      [newCategoryName]: parseFloat(newCategoryLimit) 
+      [newCategoryName.trim()]: limit 
     };
     const updatedBudget = { ...localBudget, categories: updatedCategories };
     setLocalBudget(updatedBudget);
@@ -76,10 +79,16 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
   };
 
   const handleSave = () => {
+    const parsedLimit = parseFloat(targetLimit);
+    const parsedSalary = parseFloat(salary);
+    
+    if (isNaN(parsedLimit) || parsedLimit < 0) return;
+    if (isNaN(parsedSalary) || parsedSalary < 0) return;
+
     onUpdate({ 
       ...localBudget, 
-      monthlyLimit: parseFloat(targetLimit) || totalAllocated,
-      salary: parseFloat(salary) || 0
+      monthlyLimit: parsedLimit || totalAllocated,
+      salary: parsedSalary || 0
     });
   };
 

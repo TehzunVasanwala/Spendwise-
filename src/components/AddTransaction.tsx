@@ -41,11 +41,18 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!amount || !description || (type === 'expense' && !category)) return;
+    const parsedAmount = Math.abs(parseFloat(amount)); // Guarantee positive value
+    if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
+      sound.playClick();
+      return;
+    }
+    if (!description.trim()) return;
+    if (type === 'expense' && !category) return;
+
     onAdd({
       type,
-      amount: parseFloat(amount),
-      description,
+      amount: parsedAmount,
+      description: description.trim(),
       category: type === 'expense' ? category : undefined
     });
     onClose();

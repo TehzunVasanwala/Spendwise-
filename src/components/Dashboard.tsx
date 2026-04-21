@@ -106,15 +106,27 @@ export default function Dashboard({
 
   // Daily Allowance Calculation
   const dailyAllowance = useMemo(() => {
-    const now = new Date();
-    if (!isSameMonth(now, selectedDate)) return { amount: 0, isExceeded: false, todaySpent: 0 };
+    const today = new Date();
+    const isCurrentMonth = isSameMonth(today, selectedDate);
+    const monthStart = startOfMonth(selectedDate);
+    const monthEnd = endOfMonth(selectedDate);
+    const daysInMonth = differenceInDays(monthEnd, monthStart) + 1;
+
+    if (!isCurrentMonth) {
+      // For past/future months, show the average daily spend for that month
+      return { 
+        amount: totalSpent / daysInMonth, 
+        isExceeded: totalSpent > effectiveLimit, 
+        todaySpent: 0,
+        isHistory: true 
+      };
+    }
     
-    const lastDay = endOfMonth(now);
-    const daysLeft = differenceInDays(lastDay, now) + 1;
+    const daysLeft = differenceInDays(monthEnd, today) + 1;
     
     // Subtract upcoming unpaid bills from remaining budget to get "Safe to Spend"
     const unpaidBillsTotal = bills
-      .filter(b => !b.isPaid && isSameMonth(new Date(), selectedDate))
+      .filter(b => !b.isPaid && isSameMonth(today, selectedDate))
       .reduce((sum, b) => sum + b.amount, 0);
       
     const safeRemaining = remainingBudget - unpaidBillsTotal;
@@ -125,9 +137,10 @@ export default function Dashboard({
     return {
       amount: Math.max(0, safeRemaining / daysLeft),
       isExceeded: safeRemaining <= 0,
-      todaySpent
+      todaySpent,
+      isHistory: false
     };
-  }, [remainingBudget, selectedDate, bills, filteredExpenses]);
+  }, [remainingBudget, selectedDate, bills, filteredExpenses, totalSpent, effectiveLimit]);
 
   const categoryData = useMemo(() => {
     const data: Record<string, number> = {};
@@ -388,7 +401,9 @@ export default function Dashboard({
                 "text-[10px] font-black uppercase tracking-[0.3em] leading-tight",
                 dailyAllowance.isExceeded ? "text-red-500" : "text-brand-gray-muted"
               )}>
-                {dailyAllowance.isExceeded ? 'Daily Threshold Exceeded' : 'Safe to Spend Today'}
+                {dailyAllowance.isHistory 
+                  ? 'Daily Average for Period' 
+                  : dailyAllowance.isExceeded ? 'Daily Threshold Exceeded' : 'Safe to Spend Today'}
               </p>
               <div className="flex items-center gap-1.5 mt-1">
                 <div className={cn("w-1.5 h-1.5 rounded-full", dailyAllowance.isExceeded ? "bg-red-500" : "bg-brand-accent animate-pulse")} />
