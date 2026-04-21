@@ -14,10 +14,16 @@ export default function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
     return CATEGORY_UI[category as keyof typeof CATEGORY_UI] || CATEGORY_UI.Other;
   };
 
-  const sortedExpenses = [...expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedExpenses = [...expenses].sort((a, b) => {
+    const timeA = new Date(a.date).getTime();
+    const timeB = new Date(b.date).getTime();
+    return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+  });
 
   const groupedExpenses = sortedExpenses.reduce((groups, expense) => {
-    const date = format(new Date(expense.date), 'MMM dd, yyyy');
+    const d = new Date(expense.date);
+    if (isNaN(d.getTime())) return groups;
+    const date = format(d, 'MMM dd, yyyy');
     if (!groups[date]) groups[date] = [];
     groups[date].push(expense);
     return groups;

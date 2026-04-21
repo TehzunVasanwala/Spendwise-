@@ -243,21 +243,21 @@ export default function Bills({ bills, userId, categories, onToggle, onDelete }:
                   onToggle(bill.id);
                 }}
                 className={cn(
-                  "flex items-center gap-2 px-5 p-3 rounded-2xl text-[10px] font-bold uppercase tracking-[0.1em] transition-all active:scale-95 shadow-lg",
+                  "flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.1em] transition-all active:scale-90 shadow-[0_10px_25px_rgba(0,0,0,0.1)]",
                   bill.isPaid 
-                    ? "bg-brand-black text-white" 
-                    : "bg-brand-gray-light text-brand-black hover:bg-brand-black hover:text-white"
+                    ? "bg-brand-black text-white hover:scale-[1.02]" 
+                    : "bg-brand-gray-light text-brand-black hover:bg-brand-black hover:text-white hover:shadow-2xl"
                 )}
               >
                 {bill.isPaid ? (
                   <>
                     <CheckCircle2 className="w-4 h-4 text-brand-accent shadow-glow" />
-                    Settled
+                    Archive
                   </>
                 ) : (
                   <>
                     <Circle className="w-4 h-4" />
-                    Execute
+                    Authorize
                   </>
                 )}
               </button>

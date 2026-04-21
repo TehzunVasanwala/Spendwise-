@@ -7,13 +7,12 @@ import {
   ResponsiveContainer, 
   Tooltip 
 } from 'recharts';
-import { TrendingUp, AlertCircle, ArrowDownRight, Coffee, Calendar, CheckCircle2, Circle, ChevronLeft, ChevronRight, ReceiptText, Sparkles, Wallet } from 'lucide-react';
+import { TrendingUp, AlertCircle, ArrowDownRight, Coffee, Calendar, CheckCircle2, Circle, ChevronLeft, ChevronRight, ReceiptText, Sparkles } from 'lucide-react';
 import { Expense, Income, Budget, SavingsGoal, Category, Bill, QuickPreset } from '../types';
 import { cn } from '../lib/utils';
 import { CATEGORY_UI } from '../lib/constants';
 import { format, differenceInDays, endOfMonth, startOfMonth, subMonths, addMonths, isSameMonth, isToday } from 'date-fns';
 import { sound } from '../services/soundService';
-import GooglePayButton from '@google-pay/button-react';
 
 interface DashboardProps {
   expenses: Expense[];
@@ -227,69 +226,6 @@ export default function Dashboard({
         </button>
       </div>
 
-      {/* Google Pay Instant Button */}
-      <div className="neo-card rounded-4xl p-8 bg-gradient-to-br from-brand-gray-light/30 to-white overflow-hidden relative border border-brand-gray-light/50">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
-          <div className="text-center sm:text-left">
-            <h3 className="text-sm font-display font-bold text-brand-black flex items-center gap-2 justify-center sm:justify-start">
-              <Wallet className="w-5 h-5 text-brand-accent" />
-              One-Click Instant Ledger
-            </h3>
-            <p className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-widest mt-1">Pay & Record instantly via GPay</p>
-          </div>
-          <div className="flex shrink-0">
-            <GooglePayButton
-              environment="TEST"
-              paymentRequest={{
-                apiVersion: 2,
-                apiVersionMinor: 0,
-                allowedPaymentMethods: [
-                  {
-                    type: 'CARD',
-                    parameters: {
-                      allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
-                      allowedCardNetworks: ['MASTERCARD', 'VISA'],
-                    },
-                    tokenizationSpecification: {
-                      type: 'PAYMENT_GATEWAY',
-                      parameters: {
-                        gateway: 'example',
-                        gatewayMerchantId: 'exampleGatewayMerchantId',
-                      },
-                    },
-                  },
-                ],
-                merchantInfo: {
-                  merchantId: '12345678901234567890',
-                  merchantName: 'SpendWise Demo',
-                },
-                transactionInfo: {
-                  totalPriceStatus: 'FINAL',
-                  totalPriceLabel: 'Total',
-                  totalPrice: '1.00',
-                  currencyCode: 'INR',
-                  countryCode: 'IN',
-                },
-              }}
-              onLoadPaymentData={(paymentRequest) => {
-                console.log('load payment data', paymentRequest);
-                sound.playIncome();
-                onQuickAdd({
-                  id: 'gpay-' + Date.now(),
-                  name: 'GPay Transaction',
-                  amount: 1,
-                  category: 'Other',
-                  icon: '💳'
-                });
-              }}
-              buttonColor="black"
-              buttonType="pay"
-              className="h-12 w-48 sm:w-56"
-            />
-          </div>
-        </div>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full blur-3xl -mr-10 -mt-10" />
-      </div>
       <motion.div 
         whileHover={{ scale: 1.01 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -298,17 +234,22 @@ export default function Dashboard({
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 sm:gap-0 mb-12 sm:mb-16">
             <div className="space-y-1">
-              <p className="text-brand-gray-muted text-[11px] font-black uppercase tracking-[0.4em] mb-3 px-1 opacity-40">Bank Balance</p>
+              <p className={cn(
+                "text-[10px] font-black uppercase tracking-[0.4em] mb-4 px-1",
+                netFlow >= 0 ? "text-brand-accent/60" : "text-red-400"
+              )}>
+                {netFlow >= 0 ? "Surplus Availability" : "Financial Deficit"}
+              </p>
               <h2 className="text-5xl sm:text-7xl font-display font-bold tracking-tighter leading-none whitespace-nowrap drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">₹{netFlow.toLocaleString('en-IN')}</h2>
             </div>
             <div className={cn(
               "backdrop-blur-3xl px-7 py-3.5 rounded-[24px] flex items-center gap-3 border shadow-2xl transition-all duration-700 hover:bg-white/10 shrink-0",
-              isOverBudget ? "bg-red-500/20 border-red-500/30" : "bg-white/10 border-white/20"
+              netFlow < 0 ? "bg-red-500/20 border-red-500/30" : "bg-white/10 border-white/20"
             )}>
-              {isOverBudget ? (
+              {netFlow < 0 ? (
                 <>
                   <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.5)]" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-red-400">Leakage</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-red-400">Deficit</span>
                 </>
               ) : (
                 <>

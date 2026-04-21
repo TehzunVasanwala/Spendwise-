@@ -254,7 +254,7 @@ export async function suggestBudgetDistribution(totalLimit: number, categories: 
 export async function parseTransactionsFromText(text: string, availableCategories: string[]): Promise<{ expenses: Partial<Expense>[], income: Partial<Income>[] }> {
   try {
     const ai = getAI();
-    const prompt = `Extract all financial transactions from the following raw text (this is likely from a Google Pay activity history or bank statement). 
+    const prompt = `Extract all financial transactions from the following raw text (likely from a Google Pay history or bank statement). 
     
     TEXT:
     """
@@ -263,9 +263,11 @@ export async function parseTransactionsFromText(text: string, availableCategorie
     
     RULES:
     1. Distinguish between Expenses (money going out) and Income (money coming in/refunds).
-    2. For each transaction, extract: amount, description, and date (ISO string if possible, or relative to today).
-    3. Categorize Expenses into exactly one of these categories: ${availableCategories.join(', ')}.
-    4. If a transaction is unclear, ignore it.
+    2. For each transaction, extract: amount, description, and date.
+    3. The DATE must be converted to an ISO 8601 string (e.g., 2024-05-20T00:00:00.000Z). If time is not available, default to 12:00 PM on that date.
+    4. Categorize Expenses into exactly one of these categories: ${availableCategories.join(', ')}.
+    5. Clean up descriptions (e.g., remove "Payment to", "Received from").
+    6. If a transaction is unclear or incomplete, ignore it.
     
     Return a JSON object with two arrays: 'expenses' and 'income'.`;
 

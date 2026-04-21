@@ -91,6 +91,10 @@ export default function App() {
     { id: 'p4', name: 'Grocery', amount: 2000, category: 'Food', icon: '🛒' }
   ]);
 
+  const totalSpent = useMemo(() => expenses.reduce((sum, e) => sum + e.amount, 0), [expenses]);
+  const totalIncome = useMemo(() => income.reduce((sum, i) => sum + i.amount, 0), [income]);
+  const netFlow = useMemo(() => (budget.salary || totalIncome) - totalSpent, [budget.salary, totalIncome, totalSpent]);
+
   // Auth Listener
   useEffect(() => {
     const checkParams = () => {
@@ -214,23 +218,32 @@ export default function App() {
     
     if (todayStr === lastUpdateStr) return; // Already updated today
     
-    // Check yesterday's spending
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    
-    const yesterdayExpenses = expenses.filter(e => e.date.startsWith(yesterdayStr));
-    const yesterdayTotal = yesterdayExpenses.reduce((sum, e) => sum + e.amount, 0);
-    
-    // Calculate daily limit based on actual days in the month
-    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-    const dailyLimit = budget.monthlyLimit / daysInMonth;
+    // Check if we missed more than one day
+    const lastUpdate = new Date(userStats.lastUpdateDate);
+    const dayGap = Math.floor((today.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24));
     
     let newStreak = userStats.currentStreak;
-    if (yesterdayTotal <= dailyLimit && yesterdayExpenses.length > 0) {
-      newStreak += 1;
-    } else if (yesterdayTotal > dailyLimit) {
+
+    if (dayGap > 1) {
+      // Missed a full day (or more), streak resets
       newStreak = 0;
+    } else {
+      // Check yesterday's spending
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      
+      const yesterdayExpenses = expenses.filter(e => e.date?.startsWith(yesterdayStr));
+      const yesterdayTotal = yesterdayExpenses.reduce((sum, e) => sum + e.amount, 0);
+      
+      const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+      const dailyLimit = budget.monthlyLimit / daysInMonth;
+      
+      if (yesterdayTotal <= dailyLimit && yesterdayExpenses.length > 0) {
+        newStreak += 1;
+      } else if (yesterdayTotal > dailyLimit) {
+        newStreak = 0;
+      }
     }
     
     const newLongest = Math.max(newStreak, userStats.longestStreak);
@@ -433,7 +446,27 @@ export default function App() {
     try {
       const batch = [];
       
-      for (const exp of importedExpenses) {
+      // Filter out duplicates (Match on amount, description, and date)
+      const isDuplicate = (t: Partial<Expense | Income>, existingList: (Expense | Income)[]) => {
+        const tDate = t.date ? new Date(t.date) : null;
+        if (!tDate || isNaN(tDate.getTime())) return false;
+
+        return existingList.some(item => {
+          const itemDate = new Date(item.date);
+          return item.amount === t.amount && 
+            item.description.trim().toLowerCase() === t.description?.trim().toLowerCase() &&
+            itemDate.toDateString() === tDate.toDateString();
+        });
+      };
+
+      const newExpenses = importedExpenses.filter(e => !isDuplicate(e, expenses));
+      const newIncome = importedIncome.filter(i => !isDuplicate(i, income));
+
+      if (newExpenses.length === 0 && newIncome.length === 0) {
+        return;
+      }
+      
+      for (const exp of newExpenses) {
         batch.push(addDoc(collection(db, 'expenses'), {
           ...exp,
           userId: user.uid,
@@ -441,7 +474,7 @@ export default function App() {
         }));
       }
       
-      for (const inc of importedIncome) {
+      for (const inc of newIncome) {
         batch.push(addDoc(collection(db, 'income'), {
           ...inc,
           userId: user.uid,
@@ -482,11 +515,16 @@ export default function App() {
 
   if (!isAuthReady) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-          <p className="text-sm font-medium text-gray-500">Checking authentication...</p>
-        </div>
+      <div className="fixed inset-0 bg-white flex flex-col items-center justify-center">
+        <motion.div
+          animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="w-24 h-24 bg-brand-gray-light rounded-[32px] flex items-center justify-center mb-8"
+        >
+          <Wallet className="w-10 h-10 text-brand-black" />
+        </motion.div>
+        <Loader2 className="w-6 h-6 text-brand-black animate-spin" />
+        <p className="text-[10px] uppercase font-bold tracking-[0.2em] mt-6 text-brand-gray-muted">Initializing SpendWise</p>
       </div>
     );
   }
@@ -781,6 +819,8 @@ export default function App() {
                 onClose={() => setIsSmartImporterOpen(false)}
                 onImport={handleSmartImport}
                 categories={Object.keys(budget.categories)}
+                existingExpenses={expenses}
+                existingIncome={income}
               />
             )}
           </AnimatePresence>
