@@ -95,14 +95,16 @@ export default function Dashboard({
 
   const totalSpent = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
   const totalIncome = filteredIncome.reduce((sum, i) => sum + i.amount, 0);
-  const effectiveIncome = budget.salary || totalIncome;
+  // Sum assigned salary plus any extra credits/income found in statements
+  const effectiveInflow = (budget.salary || 0) + totalIncome;
+  const effectiveIncome = effectiveInflow;
   
-  // Use income as fallback if budget is not set
-  const effectiveLimit = budget.monthlyLimit > 0 ? budget.monthlyLimit : effectiveIncome;
+  // Use inflow as fallback if budget is not set
+  const effectiveLimit = budget.monthlyLimit > 0 ? budget.monthlyLimit : effectiveInflow;
   const remainingBudget = effectiveLimit - totalSpent;
   const percentSpent = effectiveLimit > 0 ? (totalSpent / effectiveLimit) * 100 : 0;
   const isOverBudget = percentSpent > 100;
-  const netFlow = effectiveIncome - totalSpent;
+  const netFlow = effectiveInflow - totalSpent;
 
   // Daily Allowance Calculation
   const dailyAllowance = useMemo(() => {

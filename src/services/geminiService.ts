@@ -258,7 +258,7 @@ export async function suggestBudgetDistribution(totalLimit: number, categories: 
 export async function parseTransactionsFromText(text: string, availableCategories: string[]): Promise<{ expenses: Partial<Expense>[], income: Partial<Income>[] }> {
   try {
     const ai = getAI();
-    const prompt = `Extract all financial transactions from the following raw text (likely from a Google Pay history or bank statement). 
+    const prompt = `Extract all financial transactions from the following raw text (from a Google Pay history, UPI app, or traditional Bank Account Statement). 
     
     TEXT:
     """
@@ -266,14 +266,19 @@ export async function parseTransactionsFromText(text: string, availableCategorie
     """
     
     RULES:
-    1. Distinguish between Expenses (money going out) and Income (money coming in/refunds).
-    2. IN INCOME: Look for keywords like "Received from", "Refunded", "Credit", "Cashback", "Added to balance", or positive numbers.
-    3. IN EXPENSES: Look for keywords like "Paid to", "Sent to", "Debit", "Payment to", or negative numbers.
+    1. Distinguish between Expenses (money going out/Debit) and Income (money coming in/Credit/Refunds).
+    2. INCOME IDENTIFICATION: 
+       - Look for keywords like "Received from", "Refunded", "Credit", "CR", "Cashback", "Added to balance", "Salary", "Interest".
+       - In tabular statements, look for the 'Credit' column or positive changes in balance.
+    3. EXPENSE IDENTIFICATION: 
+       - Look for keywords like "Paid to", "Sent to", "Debit", "DR", "Payment to", "Purchase", "Withdrawal".
+       - In tabular statements, look for the 'Debit' column or negative changes in balance.
     4. For each transaction, extract: amount, description, and date.
-    5. The DATE must be converted to an ISO 8601 string (e.g., 2026-04-21T12:00:00.000Z). Use the actual year from the text or 2026 if not specified.
+    5. The DATE must be converted to an ISO 8601 string (e.g., 2026-04-21T12:00:00.000Z). Use numeric dates or month names. Use 2026 if the year is missing.
     6. Categorize Expenses into exactly one of these categories: ${availableCategories.join(', ')}.
-    7. Clean up descriptions (e.g., remove "Payment to", "Received from", "UPI Transaction ID", etc.).
-    8. If a transaction is unclear or incomplete, ignore it.
+    7. Clean up descriptions: Remove technical IDs like "UPI Transaction ID", "Ref No", "UTR", but keep meaningful vendor or payer names.
+    8. Deduplication Hint: If same text appears multiple times with same amount on same date, treat as one unless it's clearly a separate entry.
+    9. If a block of text describes a summary rather than a single transaction, ignore it.
     
     Return a JSON object with two arrays: 'expenses' and 'income'.`;
 
