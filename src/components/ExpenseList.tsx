@@ -50,83 +50,95 @@ export default function ExpenseList({
   }, {} as Record<string, CombinedTransaction[]>);
 
   return (
-    <div className="space-y-10 pb-32">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-display font-bold tracking-tight text-brand-black">Ledger</h2>
-        <div className="flex items-center gap-3">
+    <div className="space-y-12 pb-40">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 px-2">
+        <div className="space-y-2">
+           <h2 className="text-4xl font-display font-medium tracking-tight text-brand-black">Ledger Archive</h2>
+           <p className="text-sm font-medium text-brand-gray-muted leading-relaxed">Systematic history of all verified financial logs.</p>
+        </div>
+
+        <div className="flex items-center gap-2 bg-white/50 backdrop-blur-xl p-1.5 rounded-2xl border border-white shadow-sm">
           <button 
             onClick={() => onDateChange(subMonths(selectedDate, 1))}
-            className="w-10 h-10 bg-white border border-brand-gray-light rounded-xl flex items-center justify-center hover:bg-brand-black hover:text-white transition-all shadow-sm active:scale-90"
+            className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-brand-gray-light transition-all active:scale-95"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-5 h-5 text-brand-gray-muted" />
           </button>
-          <div className="flex flex-col items-center min-w-[120px]">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-accent">{format(selectedDate, 'yyyy')}</span>
-            <span className="text-sm font-display font-bold text-brand-black uppercase tracking-widest">{format(selectedDate, 'MMMM')}</span>
+          
+          <div className="px-4 text-center min-w-[120px]">
+            <span className="block text-[9px] font-black uppercase tracking-[0.3em] text-brand-accent/60 mb-0.5">{format(selectedDate, 'yyyy')}</span>
+            <span className="block text-sm font-display font-bold text-brand-black uppercase tracking-widest">{format(selectedDate, 'MMMM')}</span>
           </div>
+
           <button 
             onClick={() => onDateChange(addMonths(selectedDate, 1))}
-            className="w-10 h-10 bg-white border border-brand-gray-light rounded-xl flex items-center justify-center hover:bg-brand-black hover:text-white transition-all shadow-sm active:scale-90"
+            className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-brand-gray-light transition-all active:scale-95"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-5 h-5 text-brand-gray-muted" />
           </button>
         </div>
       </div>
 
       {sortedTransactions.length === 0 ? (
-        <div className="neo-card p-20 flex flex-col items-center justify-center text-center opacity-60">
-          <div className="w-20 h-20 bg-brand-gray-light rounded-full flex items-center justify-center mb-6">
-            <Tag className="w-10 h-10 text-brand-gray-muted/30" />
+        <div className="glass-card p-24 flex flex-col items-center justify-center text-center">
+          <div className="w-24 h-24 bg-brand-gray-light rounded-[40px] flex items-center justify-center mb-8 border border-white/50">
+            <Tag className="w-10 h-10 text-brand-gray-muted/20" />
           </div>
-          <p className="text-sm font-semibold text-brand-black">Archive Empty</p>
-          <p className="text-[10px] uppercase font-bold tracking-widest mt-1 text-brand-gray-muted">No transactions registered</p>
+          <p className="text-base font-display font-bold text-brand-black uppercase tracking-widest">Vault Empty</p>
+          <p className="text-xs font-semibold mt-2 text-brand-gray-muted/60 leading-relaxed">No registered transactions found for this period.</p>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-12">
           {Object.entries(groupedTransactions)
             .sort((a, b) => new Date(b[1][0].date).getTime() - new Date(a[1][0].date).getTime())
             .map(([date, items]) => (
             <div key={date} className="space-y-4">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-gray-muted px-4">{date}</h3>
-              <div className="neo-card overflow-hidden">
+              <div className="flex items-center gap-3 px-2">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-brand-gray-muted opacity-50">{date}</h3>
+                <div className="flex-1 h-px bg-brand-gray-light" />
+              </div>
+              
+              <div className="glass-card overflow-hidden !p-0">
                 {items.map((t, index) => {
                   const { icon: CategoryIcon, color } = t.ledgerType === 'expense' 
                     ? getCategoryUI(t.category) 
-                    : { icon: ArrowDownLeft, color: 'bg-green-500' };
+                    : { icon: ArrowDownLeft, color: 'bg-indigo-500' };
 
                   return (
                     <div 
                       key={`${t.ledgerType}-${t.id}`} 
                       className={cn(
-                        "group flex items-center justify-between p-6 hover:bg-brand-gray-light/30 transition-all duration-300",
-                        index !== items.length - 1 && "border-b border-brand-gray-light/50"
+                        "group flex items-center justify-between p-6 hover:bg-white/40 transition-all duration-300",
+                        index !== items.length - 1 && "border-b border-brand-gray-light/30"
                       )}
                     >
-                      <div className="flex items-center gap-5">
+                      <div className="flex items-center gap-6">
                         <div className={cn(
-                          "w-12 h-12 rounded-[18px] flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-500 ring-1 ring-white/10 text-white",
+                          "w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-500 text-white",
                           color
                         )}>
-                          <CategoryIcon className="w-5 h-5 drop-shadow-sm" />
+                          <CategoryIcon className="w-6 h-6" />
                         </div>
                         <div>
                           <p className="text-base font-display font-bold text-brand-black tracking-tight leading-tight">{t.description}</p>
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gray-muted mt-1.5 opacity-60">{t.category}</p>
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gray-muted mt-2 opacity-50">{t.category}</p>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-4 sm:gap-6">
-                        <span className={cn(
-                          "text-lg font-display font-bold tracking-tighter",
-                          t.ledgerType === 'expense' ? "text-brand-black" : "text-green-600"
-                        )}>
-                          {t.ledgerType === 'expense' ? '-' : '+'}₹{t.amount.toLocaleString('en-IN')}
-                        </span>
+                      <div className="flex items-center gap-6">
+                        <div className="text-right">
+                           <span className={cn(
+                             "text-xl font-display font-bold tracking-tighter block",
+                             t.ledgerType === 'expense' ? "text-brand-black" : "text-indigo-600"
+                           )}>
+                             {t.ledgerType === 'expense' ? '-' : '+'}₹{t.amount.toLocaleString('en-IN')}
+                           </span>
+                        </div>
                         <button 
                           onClick={() => t.ledgerType === 'expense' ? onDeleteExpense(t.id) : onDeleteIncome(t.id)}
-                          className="w-10 h-10 flex items-center justify-center text-brand-gray-muted/30 hover:text-red-500 hover:bg-red-50 rounded-[14px] transition-all duration-300 active:scale-90"
+                          className="w-10 h-10 flex items-center justify-center text-brand-gray-muted/20 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-300 group/btn"
                         >
-                          <Trash2 className="w-4.5 h-4.5" />
+                          <Trash2 className="w-4 h-4 group-hover/btn:scale-110" />
                         </button>
                       </div>
                     </div>

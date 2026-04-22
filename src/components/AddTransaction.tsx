@@ -22,6 +22,13 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
   const [isCategorizing, setIsCategorizing] = useState(false);
   const [step, setStep] = useState(1);
   const [isExpanding, setIsExpanding] = useState(true);
+  const [shake, setShake] = useState(false);
+  const [lastSuggestedDesc, setLastSuggestedDesc] = useState('');
+
+  const triggerShake = () => {
+    setShake(true);
+    setTimeout(() => setShake(false), 500);
+  };
 
   React.useEffect(() => {
     if (isIslandMode) {
@@ -29,6 +36,28 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
       return () => clearTimeout(timer);
     }
   }, [isIslandMode]);
+
+  // AI Category Suggestion Debounce
+  React.useEffect(() => {
+    if (type !== 'expense' || !description.trim() || description.length < 3 || description === lastSuggestedDesc) return;
+
+    const timer = setTimeout(async () => {
+      setIsCategorizing(true);
+      try {
+        const suggested = await categorizeExpense(description, categories);
+        if (suggested) {
+          setCategory(suggested);
+          setLastSuggestedDesc(description);
+        }
+      } catch (err) {
+        console.error("Auto-categorization failed", err);
+      } finally {
+        setIsCategorizing(false);
+      }
+    }, 1500); // Wait 1.5s after typing stops
+
+    return () => clearTimeout(timer);
+  }, [description, type, categories, lastSuggestedDesc]);
 
   const handleAutoCategorize = async () => {
     if (!description || type === 'income' || categories.length === 0) return;
@@ -44,10 +73,17 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
     const parsedAmount = Math.abs(parseFloat(amount)); // Guarantee positive value
     if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
       sound.playClick();
+      triggerShake();
       return;
     }
-    if (!description.trim()) return;
-    if (type === 'expense' && !category) return;
+    if (!description.trim()) {
+      triggerShake();
+      return;
+    }
+    if (type === 'expense' && !category) {
+      triggerShake();
+      return;
+    }
 
     onAdd({
       type,
@@ -74,7 +110,7 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
         <motion.div 
           layoutId="dynamic-island"
           initial={{ width: 120, height: 36, borderRadius: 100, y: 0 }}
-          animate={isExpanding ? { 
+          animate={shake ? { x: [0, -10, 10, -10, 10, 0] } : isExpanding ? { 
             width: 120, 
             height: 36, 
             borderRadius: 100,
@@ -144,6 +180,7 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
                       type="number" 
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleNext()}
                       placeholder="0.00"
                       className="w-full bg-transparent border-none text-white text-7xl font-display font-bold focus:ring-0 text-center placeholder:text-white/5 tracking-tighter"
                     />
@@ -195,6 +232,7 @@ export default function AddTransaction({ onClose, onAdd, categories, isIslandMod
                         type="text" 
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleNext()}
                         placeholder={type === 'expense' ? "e.g., Cloud Infrastructure" : "e.g., Quarterly Dividend"}
                         className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 px-6 text-white text-sm font-semibold focus:ring-2 focus:ring-brand-accent/50 transition-all outline-none placeholder:text-white/10"
                       />

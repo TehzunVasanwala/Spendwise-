@@ -29,6 +29,7 @@ export interface SavingsGoal {
 export interface Budget {
   monthlyLimit: number;
   salary?: number;
+  openingBalance?: number;
   categories: Record<string, number>;
   userId: string;
 }

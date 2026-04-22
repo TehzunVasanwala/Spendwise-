@@ -26,13 +26,19 @@ export default function Bills({ bills, userId, categories, onToggle, onDelete }:
 
   const handleAddBill = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newBill.name || !newBill.amount) return;
+    const amount = parseFloat(newBill.amount);
+    const day = parseInt(newBill.dueDate);
+
+    if (!newBill.name || isNaN(amount) || amount <= 0 || isNaN(day) || day < 1 || day > 31) {
+      sound.playClick();
+      return;
+    }
 
     try {
       await addDoc(collection(db, 'bills'), {
-        name: newBill.name,
-        amount: parseFloat(newBill.amount),
-        dueDate: parseInt(newBill.dueDate),
+        name: newBill.name.trim(),
+        amount: amount,
+        dueDate: day,
         category: newBill.category,
         isPaid: false,
         userId: userId

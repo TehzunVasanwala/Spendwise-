@@ -20,12 +20,16 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [targetLimit, setTargetLimit] = useState(budget.monthlyLimit.toString());
   const [salary, setSalary] = useState(budget.salary?.toString() || '');
+  const [openingBalance, setOpeningBalance] = useState(budget.openingBalance?.toString() || '0');
+  const [isDirty, setIsDirty] = useState(false);
 
   // Keep local state in sync with external budget updates (e.g., from Dashboard edits)
   React.useEffect(() => {
     setLocalBudget(budget);
     setTargetLimit(budget.monthlyLimit.toString());
     setSalary(budget.salary?.toString() || '');
+    setOpeningBalance(budget.openingBalance?.toString() || '0');
+    setIsDirty(false);
   }, [budget]);
 
   const totalAllocated = Object.values(localBudget.categories).reduce((sum: number, limit: number) => sum + limit, 0);
@@ -69,6 +73,7 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
     setLocalBudget(updatedBudget);
     setNewCategoryName('');
     setNewCategoryLimit('');
+    setIsDirty(true);
   };
 
   const handleDeleteCategory = (category: string) => {
@@ -81,6 +86,7 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
   const handleSave = () => {
     const parsedLimit = parseFloat(targetLimit);
     const parsedSalary = parseFloat(salary);
+    const parsedOpening = parseFloat(openingBalance);
     
     if (isNaN(parsedLimit) || parsedLimit < 0) return;
     if (isNaN(parsedSalary) || parsedSalary < 0) return;
@@ -88,8 +94,10 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
     onUpdate({ 
       ...localBudget, 
       monthlyLimit: parsedLimit || totalAllocated,
-      salary: parsedSalary || 0
+      salary: parsedSalary || 0,
+      openingBalance: isNaN(parsedOpening) ? 0 : parsedOpening
     });
+    setIsDirty(false);
   };
 
   return (
@@ -98,11 +106,14 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
         <h2 className="text-3xl font-display font-bold tracking-tight text-brand-black">Settings</h2>
         <button 
           onClick={handleSave}
-          className="btn-primary py-3.5 px-6 shadow-brand-accent/20"
+          className={cn(
+            "btn-primary py-3.5 px-6 transition-all duration-500",
+            isDirty ? "shadow-brand-accent/40 bg-brand-accent" : "shadow-brand-accent/20"
+          )}
         >
           <div className="flex items-center gap-2 text-white">
-            <Save className="w-4 h-4" />
-            <span>Sync</span>
+            <Save className={cn("w-4 h-4", isDirty && "animate-pulse")} />
+            <span>{isDirty ? 'Push Changes' : 'Synced'}</span>
           </div>
         </button>
       </div>
@@ -154,13 +165,16 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
             </div>
 
             <label className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.2em] mb-4 block px-1">Primary Monthly Income</label>
-            <div className="relative border-b-2 border-brand-gray-light pb-2 focus-within:border-brand-black transition-colors">
+            <div className="relative border-b-2 border-brand-gray-light pb-2 focus-within:border-brand-black transition-colors mb-8">
               <span className="absolute left-0 bottom-2 text-2xl font-display font-bold text-brand-gray-muted">₹</span>
               <input 
                 type="number"
                 inputMode="decimal"
                 value={salary}
-                onChange={(e) => setSalary(e.target.value)}
+                onChange={(e) => {
+                  setSalary(e.target.value);
+                  setIsDirty(true);
+                }}
                 className="w-full pl-8 bg-transparent text-2xl font-display font-bold outline-none placeholder:text-brand-gray-light font-mono"
               />
             </div>
@@ -217,7 +231,11 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
                 type="text"
                 placeholder="New Category Name"
                 value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value)}
+                onChange={(e) => {
+                  setNewCategoryName(e.target.value);
+                  setIsDirty(true);
+                }}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
                 className="w-full bg-brand-gray-light p-5 rounded-2xl text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-brand-black/5 transition-all text-center"
               />
               <div className="flex gap-4">

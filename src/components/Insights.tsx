@@ -42,102 +42,93 @@ export default function Insights({ expenses, income, budget, userStats, selected
     }
   };
 
-  useEffect(() => {
-    // Auto-fetch when month changes
-    fetchData();
-  }, [selectedDate]);
+  useEffect(() => { fetchData(); }, [selectedDate]);
 
   const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
   const totalIncome = income.reduce((sum, i) => sum + i.amount, 0);
   const netFlow = totalIncome - totalSpent;
 
   return (
-    <div className="space-y-8 pb-32">
-      <div className="flex items-center justify-between px-1">
-        <div>
-          <h2 className="text-3xl font-display font-bold tracking-tight text-brand-black">Intelligence</h2>
-          <div className="flex items-center gap-2 mt-1.5">
-            <p className="text-[10px] text-brand-gray-muted font-bold uppercase tracking-[0.2em] flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3 text-brand-accent animate-pulse" />
-              Gemini 3.0 Analysis
-            </p>
-            <span className="text-[8px] font-black bg-brand-black text-white px-2 py-0.5 rounded-md uppercase tracking-widest">{format(selectedDate, 'MMM yyyy')}</span>
-          </div>
+    <div className="space-y-12 pb-40">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 px-2">
+        <div className="space-y-2">
+           <h2 className="text-4xl font-display font-medium tracking-tight text-brand-black">Intelligence Terminal</h2>
+           <div className="flex items-center gap-3">
+             <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-brand-accent animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-brand-gray-muted opacity-60">Neural Engine v3.0</span>
+             </div>
+             <span className="text-[9px] font-black bg-brand-black text-white px-2.5 py-1 rounded-lg uppercase tracking-widest">{format(selectedDate, 'MMM yyyy')}</span>
+           </div>
         </div>
         <button 
           onClick={fetchData}
           disabled={isLoading}
           className={cn(
-            "w-12 h-12 rounded-2xl shadow-lg flex items-center justify-center transition-all duration-500",
-            isLoading ? "bg-brand-gray-light text-brand-black" : "bg-brand-black text-white hover:scale-110 active:scale-95"
+            "w-12 h-12 bg-white rounded-2xl shadow-xl flex items-center justify-center transition-all duration-500 border border-brand-gray-light",
+            isLoading ? "opacity-50" : "hover:bg-brand-black hover:text-white hover:-translate-y-1 active:scale-90"
           )}
         >
           {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
         </button>
       </div>
 
-      {/* Gamification Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="neo-card p-6 rounded-4xl flex flex-col items-center text-center">
-          <div className="w-14 h-14 bg-brand-gray-light rounded-2xl flex items-center justify-center mb-4">
-            <Flame className={cn("w-7 h-7 transition-all duration-500", userStats.currentStreak > 0 ? "text-orange-500 fill-orange-500 drop-shadow-[0_0_10px_rgba(249,115,22,0.3)]" : "text-brand-gray-muted/30")} />
+      {/* High-End Status Grid */}
+      <div className="grid grid-cols-2 gap-6 px-1">
+        <div className="glass-card flex flex-col items-center text-center !p-8 group">
+          <div className="w-16 h-16 bg-brand-gray-light rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+            <Flame className={cn("w-8 h-8 transition-all duration-700", userStats.currentStreak > 0 ? "text-orange-500 fill-orange-500 drop-shadow-2xl" : "text-brand-gray-muted/20")} />
           </div>
-          <p className="text-3xl font-display font-bold text-brand-black">{userStats.currentStreak}</p>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gray-muted mt-1">Day Streak</p>
+          <p className="text-4xl font-display font-medium text-brand-black tracking-tight">{userStats.currentStreak}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-gray-muted mt-2 opacity-50">Active Streak</p>
         </div>
-        <div className="neo-card p-6 rounded-4xl flex flex-col items-center text-center">
-          <div className="w-14 h-14 bg-brand-gray-light rounded-2xl flex items-center justify-center mb-4">
-            <Trophy className={cn("w-7 h-7 transition-all duration-500", userStats.badges.length > 0 ? "text-yellow-500 drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]" : "text-brand-gray-muted/30")} />
+        <div className="glass-card flex flex-col items-center text-center !p-8 group">
+          <div className="w-16 h-16 bg-brand-gray-light rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+            <Trophy className={cn("w-8 h-8 transition-all duration-700", userStats.badges.length > 0 ? "text-indigo-600 drop-shadow-2xl" : "text-brand-gray-muted/20")} />
           </div>
-          <p className="text-3xl font-display font-bold text-brand-black">{userStats.badges.length}</p>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gray-muted mt-1">Milestones</p>
+          <p className="text-4xl font-display font-medium text-brand-black tracking-tight">{userStats.badges.length}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-gray-muted mt-2 opacity-50">Milestone Vault</p>
         </div>
       </div>
 
-      {/* AI Spending Prediction */}
-      <div className="bg-brand-black text-white rounded-4xl p-8 shadow-2xl relative overflow-hidden group">
-        <div className="relative z-10">
-          <div className="flex items-center gap-4 mb-10">
-            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10">
-              <Calendar className="w-6 h-6 text-brand-accent" />
+      {/* AI Spending Projection */}
+      <div className="bg-brand-black text-white rounded-[48px] p-10 sm:p-14 shadow-[0_48px_120px_rgba(0,0,0,0.4)] relative overflow-hidden group">
+        <div className="relative z-10 space-y-12">
+          <div className="flex items-center gap-5">
+            <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center backdrop-blur-2xl border border-white/10 shadow-inner">
+              <Calendar className="w-7 h-7 text-brand-accent" />
             </div>
             <div>
-              <h3 className="font-display font-bold text-xl tracking-tight">AI Forecast</h3>
-              <p className="text-[10px] text-brand-gray-muted font-bold uppercase tracking-[0.2em] mt-0.5">End of cycle</p>
+              <h3 className="font-display font-medium text-2xl tracking-tight text-white/90">Predictive Modeling</h3>
+              <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.3em] mt-1.5">Full-Cycle Financial Projection</p>
             </div>
           </div>
 
           {isPredicting ? (
-            <div className="flex flex-col items-center justify-center py-16">
-              <Loader2 className="w-12 h-12 text-brand-accent animate-spin mb-6" />
-              <p className="text-[10px] text-brand-gray-muted font-black uppercase tracking-[0.3em] animate-pulse">Running Neural Forecast</p>
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="w-14 h-14 text-brand-accent animate-spin mb-8" />
+              <p className="text-[10px] text-white/40 font-black uppercase tracking-[0.4em] animate-pulse">Running Monte Carlo Simulation...</p>
             </div>
           ) : prediction ? (
             <div className="space-y-12">
-              <div className="flex items-end justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-8">
                 <div>
-                  <p className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.2em] mb-3 px-1">Projected Total Output</p>
-                  <p className={cn("text-6xl font-display font-bold tracking-tighter leading-none mb-1", prediction.isOverBudget ? "text-red-400" : "text-brand-accent shadow-glow")}>
+                  <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.4em] mb-4 px-1">Projected Aggregate Output</p>
+                  <p className={cn("text-6xl sm:text-8xl font-display font-medium tracking-tighter leading-none transition-all duration-700", prediction.isOverBudget ? "text-red-400" : "text-brand-accent")}>
                     ₹{prediction.forecastedTotal.toLocaleString('en-IN')}
                   </p>
-                  {prediction.isOverBudget && (
-                    <div className="flex items-center gap-1.5 px-1">
-                      <TrendingUp className="w-3 h-3 text-red-400" />
-                      <span className="text-[9px] font-black uppercase tracking-widest text-red-400">Exceeding Budgeted Limit</span>
-                    </div>
-                  )}
                 </div>
-                <div className="text-right flex flex-col items-end">
-                  <p className="text-brand-gray-muted text-[10px] font-bold uppercase tracking-[0.2em] mb-4 px-1">Confidence Model</p>
-                  <div className="flex gap-1.5 h-12 items-end">
+                <div className="flex flex-col items-start sm:items-end">
+                  <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.4em] mb-4 px-1">Confidence Rating</p>
+                  <div className="flex gap-2 h-14 items-end">
                     {[1, 2, 3, 4, 5].map((i) => (
                       <motion.div 
                         initial={{ height: 0 }}
-                        animate={{ height: i <= prediction.confidence * 5 ? `${20 + i * 15}%` : '10%' }}
+                        animate={{ height: i <= prediction.confidence * 5 ? `${30 + i * 14}%` : '15%' }}
                         key={i} 
                         className={cn(
-                          "w-2 rounded-full transition-all duration-1000", 
-                          i <= prediction.confidence * 5 ? "bg-brand-accent shadow-glow" : "bg-white/5"
+                          "w-2.5 rounded-full transition-all duration-1000", 
+                          i <= prediction.confidence * 5 ? "bg-brand-accent shadow-[0_0_20px_rgba(242,125,38,0.4)]" : "bg-white/5"
                         )} 
                       />
                     ))}
@@ -146,142 +137,126 @@ export default function Insights({ expenses, income, budget, userStats, selected
               </div>
 
               <div className={cn(
-                "p-8 rounded-[32px] border backdrop-blur-3xl transition-all duration-700",
-                prediction.isOverBudget ? "bg-red-500/10 border-red-500/20 shadow-[0_20px_50px_rgba(239,68,68,0.1)]" : "bg-white/5 border-white/10 shadow-[0_20px_50px_rgba(255,255,255,0.05)]"
+                "p-10 rounded-[40px] border backdrop-blur-3xl transition-all duration-700 flex flex-col sm:flex-row gap-8 items-start sm:items-center",
+                prediction.isOverBudget ? "bg-red-500/5 border-red-500/20" : "bg-white/5 border-white/10"
               )}>
-                <div className="flex gap-5">
-                  <div className={cn(
-                    "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-inner",
-                    prediction.isOverBudget ? "bg-red-500/20" : "bg-brand-accent/20"
-                  )}>
-                    {prediction.isOverBudget ? (
-                      <AlertCircle className="w-6 h-6 text-red-400" />
-                    ) : (
-                      <Target className="w-6 h-6 text-brand-accent shadow-glow" />
-                    )}
-                  </div>
-                  <p className={cn(
-                    "text-[13px] font-semibold leading-relaxed",
-                    prediction.isOverBudget ? "text-red-100" : "text-brand-gray-light"
-                  )}>
-                    {prediction.recommendation}
-                  </p>
+                <div className={cn(
+                   "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border",
+                   prediction.isOverBudget ? "bg-red-500/30 border-red-500/50" : "bg-brand-accent/20 border-brand-accent/30"
+                )}>
+                  {prediction.isOverBudget ? <AlertCircle className="w-6 h-6 text-red-300" /> : <Target className="w-6 h-6 text-brand-accent" />}
                 </div>
+                <p className="text-[15px] font-medium leading-relaxed text-white/70 max-w-lg">
+                   {prediction.recommendation}
+                </p>
               </div>
             </div>
           ) : (
-            <div className="py-16 text-center border-2 border-dashed border-white/10 rounded-3xl flex flex-col items-center gap-4">
-              <Sparkles className="w-8 h-8 text-white/10" />
-              <p className="text-[10px] text-brand-gray-muted font-bold uppercase tracking-[0.3em]">Accumulating Transaction Context</p>
+            <div className="py-24 text-center border-2 border-dashed border-white/5 rounded-[40px] flex flex-col items-center gap-6">
+              <Sparkles className="w-10 h-10 text-white/5" />
+              <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.4em]">Aggregating Multi-Dimensional Data Context</p>
             </div>
           )}
         </div>
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-accent/10 rounded-full blur-[100px] -mr-64 -mt-64 group-hover:bg-brand-accent/20 transition-all duration-1000" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-accent/5 rounded-full blur-[140px] -mr-64 -mt-64" />
       </div>
 
-      {/* Structured AI Insights */}
-      <div className="space-y-6 relative">
-        <div className="flex items-center gap-3 px-2 mb-8">
-          <BrainCircuit className="w-5 h-5 text-brand-black" />
-          <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-black">Analysis Stream</h3>
+      {/* Analysis Stream */}
+      <div className="space-y-10">
+        <div className="flex items-center gap-4 px-2">
+           <div className="w-10 h-10 bg-brand-black rounded-xl flex items-center justify-center">
+              <BrainCircuit className="w-5 h-5 text-white" />
+           </div>
+           <div>
+              <h3 className="text-sm font-black uppercase tracking-[0.4em] text-brand-black">Analysis Stream</h3>
+              <p className="text-[10px] text-brand-gray-muted font-medium opacity-50">Real-time intelligent takeaways.</p>
+           </div>
         </div>
 
-        {/* Vertical Stream Line */}
-        {insights.length > 0 && !isLoading && (
-          <div className="absolute left-[59px] top-24 bottom-10 w-0.5 bg-gradient-to-b from-brand-gray-light via-brand-gray-light to-transparent hidden md:block" />
-        )}
-        
-        <div className="space-y-8 pl-0 md:pl-2">
+        <div className="space-y-8">
           {isLoading ? (
-            <div className="space-y-6">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="neo-card p-8 rounded-4xl bg-brand-gray-light/30 border-none">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 bg-brand-gray-light rounded-2xl animate-pulse" />
-                    <div className="space-y-2 flex-1">
-                      <div className="h-4 bg-brand-gray-light rounded-md w-1/3 animate-pulse" />
-                      <div className="h-2 bg-brand-gray-light rounded-md w-1/4 animate-pulse" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-3 bg-brand-gray-light rounded-md w-full animate-pulse" />
-                    <div className="h-3 bg-brand-gray-light rounded-md w-5/6 animate-pulse" />
-                  </div>
+            <div className="space-y-8">
+              {[1, 2].map(i => (
+                <div key={i} className="glass-card !p-12 space-y-8 animate-pulse">
+                   <div className="flex items-center gap-6">
+                      <div className="w-16 h-16 bg-brand-gray-light rounded-3xl" />
+                      <div className="space-y-3 flex-1">
+                         <div className="h-4 bg-brand-gray-light rounded-md w-1/3" />
+                         <div className="h-2 bg-brand-gray-light rounded-md w-1/4" />
+                      </div>
+                   </div>
+                   <div className="space-y-3">
+                      <div className="h-3 bg-brand-gray-light rounded-md w-full" />
+                      <div className="h-3 bg-brand-gray-light rounded-md w-5/6" />
+                   </div>
                 </div>
               ))}
             </div>
           ) : insights.length > 0 ? (
             insights.map((insight, idx) => (
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1, type: 'spring', damping: 25 }}
                 key={idx}
-                className="neo-card p-10 rounded-[40px] group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 overflow-hidden relative bg-white border border-brand-gray-light"
+                className="glass-card !p-12 group hover:shadow-2xl hover:-translate-y-1 transition-all duration-700 relative overflow-hidden"
               >
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-6">
-                      <div className={cn(
-                        "w-16 h-16 rounded-[24px] flex items-center justify-center shadow-inner transition-transform duration-500 group-hover:scale-105",
-                        insight.type === 'anomaly' ? "bg-red-50 text-red-600 shadow-red-100/30" :
-                        insight.type === 'warning' ? "bg-orange-50 text-orange-600 shadow-orange-100/30" :
-                        insight.type === 'saving' ? "bg-green-50 text-green-600 shadow-green-100/30" :
-                        "bg-brand-accent/5 text-brand-accent shadow-brand-accent/10"
-                      )}>
-                        {insight.type === 'anomaly' ? <AlertCircle className="w-8 h-8" /> :
-                         insight.type === 'warning' ? <TrendingDown className="w-8 h-8" /> :
-                         insight.type === 'saving' ? <TrendingUp className="w-8 h-8" /> :
-                         <Sparkles className="w-8 h-8" />}
-                      </div>
-                      <div>
-                        <h4 className="font-display font-bold text-xl text-brand-black tracking-tight leading-none mb-3">{insight.title}</h4>
-                        <div className="flex items-center gap-3">
-                          <span className={cn(
-                            "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
-                            insight.type === 'anomaly' ? "bg-red-500 text-white" :
-                            insight.type === 'warning' ? "bg-orange-500 text-white" :
-                            insight.type === 'saving' ? "bg-green-500 text-white" :
-                            "bg-brand-black text-white"
-                          )}>
-                            {insight.type}
-                          </span>
-                          {insight.impact && (
-                            <span className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-widest border-l border-brand-gray-light pl-4">
-                              {insight.impact}
+                <div className="flex flex-col sm:flex-row gap-10">
+                   <div className={cn(
+                     "w-20 h-20 rounded-3xl flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-700 text-white",
+                     insight.type === 'anomaly' ? "bg-red-500" :
+                     insight.type === 'warning' ? "bg-orange-500" :
+                     insight.type === 'saving' ? "bg-green-500" :
+                     "bg-brand-black"
+                   )}>
+                     {insight.type === 'anomaly' ? <AlertCircle className="w-10 h-10" /> :
+                      insight.type === 'warning' ? <TrendingDown className="w-10 h-10" /> :
+                      insight.type === 'saving' ? <TrendingUp className="w-10 h-10" /> :
+                      <BrainCircuit className="w-10 h-10" />}
+                   </div>
+                   
+                   <div className="space-y-6 flex-1">
+                      <div className="space-y-2">
+                         <div className="flex flex-wrap items-center gap-3">
+                            <h4 className="font-display font-medium text-2xl text-brand-black tracking-tight leading-none">{insight.title}</h4>
+                            <span className={cn(
+                              "px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest",
+                              insight.type === 'anomaly' ? "bg-red-50 text-red-600" :
+                              insight.type === 'warning' ? "bg-orange-50 text-orange-600" :
+                              insight.type === 'saving' ? "bg-green-50 text-green-600" :
+                              "bg-brand-gray-light text-brand-gray-muted"
+                            )}>
+                              {insight.type}
                             </span>
-                          )}
-                        </div>
+                         </div>
+                         {insight.impact && <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-gray-muted opacity-60">{insight.impact}</p>}
                       </div>
-                    </div>
-                  </div>
-                  
-                  <p className="text-[14px] text-brand-gray-muted font-medium leading-relaxed mb-10 pl-1">
-                    {insight.description}
-                  </p>
 
-                  {insight.action && (
-                    <button className="flex items-center justify-center gap-3 w-full py-5 bg-brand-gray-light hover:bg-brand-black hover:text-white rounded-[24px] text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 active:scale-95 group/btn overflow-hidden relative">
-                      <span className="relative z-10">{insight.action}</span>
-                      <ArrowRight className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover/btn:translate-x-1" />
-                    </button>
-                  )}
+                      <p className="text-base text-brand-black/70 font-medium leading-relaxed max-w-2xl">
+                        {insight.description}
+                      </p>
+
+                      {insight.action && (
+                        <button className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.4em] text-brand-black group/link">
+                           <span>Execute Action: {insight.action}</span>
+                           <ArrowRight className="w-4 h-4 transition-transform group-hover/link:translate-x-2" />
+                        </button>
+                      )}
+                   </div>
                 </div>
-                {/* Connector Node */}
-                <div className="absolute left-[34px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-4 border-white bg-brand-gray-light hidden md:block z-20 group-hover:bg-brand-accent transition-colors" />
               </motion.div>
             ))
           ) : (
-            <div className="neo-card rounded-4xl p-20 text-center flex flex-col items-center gap-8 bg-transparent border-2 border-dashed border-brand-gray-light/50">
-              <div className="w-24 h-24 bg-brand-gray-light/50 rounded-[40px] flex items-center justify-center relative">
-                <BrainCircuit className="w-12 h-12 text-brand-gray-muted/20" />
-                <div className="absolute inset-0 bg-brand-accent/5 rounded-[40px] animate-pulse" />
+            <div className="glass-card !p-20 text-center flex flex-col items-center gap-10">
+              <div className="w-24 h-24 bg-brand-gray-light rounded-[40px] flex items-center justify-center relative overflow-hidden">
+                <BrainCircuit className="w-10 h-10 text-brand-gray-muted/20" />
+                <div className="absolute inset-0 bg-brand-accent/5 animate-pulse" />
               </div>
-              <div className="space-y-3">
-                <h4 className="font-display font-bold text-xl text-brand-black tracking-tight">Intelligence Engine Standby</h4>
-                <p className="text-[10px] font-bold text-brand-gray-muted uppercase tracking-[0.3em] max-w-[240px] leading-loose mx-auto">
-                  Populate your ledger to generate a live analysis stream.
+              <div className="space-y-4">
+                <h4 className="font-display font-medium text-2xl text-brand-black tracking-tight uppercase tracking-widest">Awaiting Simulation Data</h4>
+                <p className="text-sm text-brand-gray-muted font-medium max-w-xs mx-auto leading-relaxed">
+                  The intelligence engine requires more transactional context to initialize a meaningful analysis stream.
                 </p>
               </div>
             </div>

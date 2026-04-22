@@ -13,7 +13,10 @@ import {
   Bell,
   LogOut,
   LogIn,
-  Loader2
+  Loader2,
+  BrainCircuit,
+  Calendar,
+  Sparkles
 } from 'lucide-react';
 import { cn } from './lib/utils';
 import { Expense, Income, SavingsGoal, Budget, Category, Bill, QuickPreset, UserStats, SpendingPrediction } from './types';
@@ -27,7 +30,6 @@ import SmartImporter from './components/SmartImporter';
 import BudgetSettings from './components/BudgetSettings';
 import Bills from './components/Bills';
 import FinancialChat from './components/FinancialChat';
-import { BrainCircuit, Calendar as CalendarIcon } from 'lucide-react';
 import { auth, db, loginWithGoogle, logout, handleFirestoreError, OperationType } from './firebase';
 import { sound } from './services/soundService';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -46,6 +48,7 @@ import {
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'expenses' | 'goals' | 'bills' | 'insights' | 'settings'>('dashboard');
@@ -108,7 +111,7 @@ export default function App() {
 
   const totalSpent = useMemo(() => filteredExpenses.reduce((sum, e) => sum + e.amount, 0), [filteredExpenses]);
   const totalIncome = useMemo(() => filteredIncome.reduce((sum, i) => sum + i.amount, 0), [filteredIncome]);
-  const netFlow = useMemo(() => (budget.salary || totalIncome) - totalSpent, [budget.salary, totalIncome, totalSpent]);
+  const netFlow = useMemo(() => Math.max(totalIncome, budget.salary || 0) - totalSpent, [budget.salary, totalIncome, totalSpent]);
 
   // Auth Listener
   useEffect(() => {
@@ -185,6 +188,7 @@ export default function App() {
         };
         setDoc(statsDoc, initialStats).catch(e => handleFirestoreError(e, OperationType.WRITE, `stats/${user.uid}`));
       }
+      setTimeout(() => setInitialLoading(false), 1200);
     }, (error) => handleFirestoreError(error, OperationType.GET, `stats/${user.uid}`));
 
     const budgetDoc = doc(db, 'budgets', user.uid);
@@ -197,6 +201,7 @@ export default function App() {
         const defaultBudget: Budget = {
           monthlyLimit: 40000,
           salary: 50000,
+          openingBalance: 0,
           categories: {
             'House Rent': 17000,
             'EMI': 2700,
@@ -543,86 +548,111 @@ export default function App() {
     }
   };
 
-  if (!isAuthReady) {
+  if (!isAuthReady || (initialLoading && user)) {
     return (
-      <div className="fixed inset-0 bg-white flex flex-col items-center justify-center">
-        <motion.div
-          animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="w-24 h-24 bg-brand-gray-light rounded-[32px] flex items-center justify-center mb-8"
+      <div className="fixed inset-0 bg-brand-black flex flex-col items-center justify-center z-[1000] p-10">
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="relative mb-12"
         >
-          <Wallet className="w-10 h-10 text-brand-black" />
+          <div className="w-28 h-28 border-[6px] border-white/5 rounded-[44px] border-t-brand-accent animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Wallet className="w-10 h-10 text-white animate-pulse" />
+          </div>
         </motion.div>
-        <Loader2 className="w-6 h-6 text-brand-black animate-spin" />
-        <p className="text-[10px] uppercase font-bold tracking-[0.2em] mt-6 text-brand-gray-muted">Initializing SpendWise</p>
+        
+        <div className="text-center space-y-4">
+          <h2 className="text-white font-display font-bold text-xl tracking-tight">SpendWise v3</h2>
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em] animate-pulse">
+              Synchronizing Neural Ledger
+            </p>
+            <div className="w-48 h-1 bg-white/5 rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ x: '-100%' }}
+                animate={{ x: '100%' }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                className="w-full h-full bg-brand-accent"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-brand-gray-light p-6 text-center mesh-bg select-none">
         <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-24 h-24 bg-brand-black rounded-4xl flex items-center justify-center mb-10 shadow-[0_20px_50px_rgba(0,0,0,0.15)]"
+          initial={{ opacity: 0, scale: 0.8, rotate: -12 }}
+          animate={{ opacity: 1, scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', damping: 20 }}
+          className="w-28 h-28 bg-brand-black rounded-[40px] flex items-center justify-center mb-12 shadow-[0_40px_100px_rgba(0,0,0,0.3)] border border-white/10"
         >
-          <Wallet className="w-10 h-10 text-white" />
+          <Wallet className="w-12 h-12 text-white" />
         </motion.div>
         
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+          className="space-y-4"
         >
-          <h1 className="text-4xl font-display font-bold tracking-tight mb-3">SpendWise</h1>
-          <p className="text-brand-gray-muted mb-10 max-w-[280px] mx-auto leading-relaxed">
-            Your intelligence-first financial companion. Sign in to master your money.
+          <h1 className="text-6xl font-display font-medium tracking-tight text-brand-black">SpendWise</h1>
+          <p className="text-brand-gray-muted mb-12 max-w-[320px] mx-auto text-sm font-medium leading-relaxed">
+            Architecting your financial future through high-fidelity intelligence and automated synchronization.
           </p>
         </motion.div>
         
         {authError && (
           <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8 p-4 bg-red-50/50 border border-red-100 rounded-3xl flex items-start gap-3 text-left max-w-xs"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-10 p-6 bg-red-50 rounded-[32px] border border-red-100 flex items-start gap-4 text-left max-w-sm shadow-sm"
           >
-            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <AlertCircle className="w-6 h-6 text-red-500 shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-semibold text-red-800">Authentication Error</p>
-              <p className="text-xs text-red-600/80 mt-1">{authError}</p>
+              <p className="text-sm font-bold text-red-900">Vault Access Interrupted</p>
+              <p className="text-xs text-red-600/80 mt-1 font-medium">{authError}</p>
             </div>
           </motion.div>
         )}
 
         <motion.button 
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.3 }}
           onClick={handleLogin}
           disabled={isLoggingIn}
-          className="btn-primary w-full max-w-[280px]"
+          className="btn-primary w-full max-w-[320px] h-20 text-sm"
         >
           {isLoggingIn ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-6 h-6 animate-spin" />
           ) : (
-            <>
-              <LogIn className="w-5 h-5" />
-              Sign in with Google
-            </>
+            <div className="flex items-center gap-4">
+              <LogIn className="w-6 h-6" />
+              <span>Initialize Session</span>
+            </div>
           )}
         </motion.button>
         
-        <p className="mt-8 text-[11px] font-semibold text-brand-gray-muted uppercase tracking-[0.1em]">
-          Powered by Gemini 3 Flash
-        </p>
+        <div className="mt-12 flex flex-col items-center gap-4 opacity-40">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-brand-gray-muted">
+            Intelligence Provided by Gemini 3 Flash
+          </p>
+          <div className="flex gap-2">
+            {[...Array(3)].map((_, i) => <div key={i} className="w-1 h-1 bg-brand-gray-muted rounded-full" />)}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className={cn(
-      "min-h-screen font-sans selection:bg-brand-accent/10 selection:text-brand-accent overflow-x-hidden transition-colors duration-500",
+      "min-h-screen font-sans selection:bg-brand-accent/20 selection:text-brand-accent overflow-x-hidden transition-all duration-700 mesh-bg",
       isQuickAddOpen ? "bg-black" : "bg-brand-gray-light"
     )}>
       {isQuickAddOpen ? (
@@ -638,213 +668,140 @@ export default function App() {
           />
         </div>
       ) : (
-        <>
-          {/* Header */}
-          <header className="sticky top-0 z-30 bg-brand-gray-light/80 backdrop-blur-xl border-b border-gray-200/50 px-4 sm:px-6 py-4 text-brand-black">
-            <div className="max-w-lg mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <motion.div 
-                  whileHover={{ rotate: 10 }}
-                  className="w-8 h-8 sm:w-9 sm:h-9 bg-brand-black rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg"
-                >
-                  <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </motion.div>
-                <h1 className="text-lg sm:text-xl font-display font-bold tracking-tight">SpendWise</h1>
-              </div>
-              <div className="flex items-center gap-1">
-                <button 
-                  onClick={() => setActiveTab('settings')}
+        <div className="flex min-h-screen">
+          {/* Desktop Sidebar Rail */}
+          <aside className="hidden lg:flex w-24 flex-col items-center py-10 border-r border-brand-gray-light bg-white sticky top-0 h-screen z-40">
+            <motion.div 
+               whileHover={{ rotate: 10, scale: 1.1 }}
+               className="w-12 h-12 bg-brand-black rounded-2xl flex items-center justify-center shadow-xl mb-12"
+            >
+              <Wallet className="w-6 h-6 text-white" />
+            </motion.div>
+
+            <div className="flex-1 flex flex-col gap-8">
+              {[
+                { id: 'dashboard', icon: LayoutGrid, label: 'Home' },
+                { id: 'expenses', icon: History, label: 'Logs' },
+                { id: 'insights', icon: BrainCircuit, label: 'Coach' },
+                { id: 'goals', icon: Target, label: 'Goals' },
+                { id: 'bills', icon: Calendar, label: 'Bills' },
+                { id: 'settings', icon: Settings, label: 'Configs' },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id as any)}
                   className={cn(
-                    "p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all duration-300",
-                    activeTab === 'settings' ? "bg-brand-black text-white shadow-lg" : "text-brand-gray-muted hover:bg-brand-gray-light hover:text-brand-black"
+                    "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
+                    activeTab === item.id ? "bg-brand-black text-white shadow-xl" : "text-brand-gray-muted hover:bg-brand-gray-light hover:text-brand-black"
                   )}
-                  aria-label="Settings"
+                  title={item.label}
                 >
-                  <Settings className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
+                  <item.icon className="w-5 h-5" />
                 </button>
-                <button className="btn-ghost relative">
-                  <Bell className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
-                  {bills.some(b => !b.isPaid) && (
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-brand-accent rounded-full border-2 border-brand-gray-light" />
-                  )}
-                </button>
-              </div>
+              ))}
             </div>
-          </header>
 
-          {/* Main Content */}
-          <main className="max-w-lg mx-auto px-4 sm:px-6 py-4">
-            <AnimatePresence mode="wait">
-              {activeTab === 'dashboard' && (
+            <button 
+              onClick={() => setIsSmartImporterOpen(true)}
+              className="w-12 h-12 bg-brand-accent text-white rounded-2xl flex items-center justify-center shadow-lg hover:shadow-brand-accent/40 active:scale-90 transition-all group"
+            >
+              <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+            </button>
+          </aside>
+
+          <div className="flex-1 flex flex-col relative w-full lg:max-w-screen-xl lg:mx-auto">
+            {/* Unified Header */}
+            <header className="sticky top-0 z-30 bg-brand-gray-light/60 backdrop-blur-3xl px-6 sm:px-12 py-6 flex items-center justify-between">
+               <div className="lg:hidden flex items-center gap-4">
+                 <div className="w-10 h-10 bg-brand-black rounded-xl flex items-center justify-center shadow-lg">
+                    <Wallet className="w-5 h-5 text-white" />
+                 </div>
+                 <h1 className="text-xl font-display font-medium tracking-tight">SpendWise</h1>
+               </div>
+               
+               <div className="hidden lg:block">
+                 <h2 className="text-xs font-black uppercase tracking-[0.3em] text-brand-gray-muted opacity-40">Financial Terminal v3.0</h2>
+               </div>
+
+               <div className="flex items-center gap-3">
+                 <button className="w-12 h-12 bg-white rounded-2xl border border-brand-gray-light flex items-center justify-center text-brand-gray-muted hover:text-brand-black transition-all group relative">
+                    <Bell className="w-5 h-5" />
+                    {bills.some(b => !b.isPaid) && (
+                      <span className="absolute top-3.5 right-3.5 w-1.5 h-1.5 bg-brand-accent rounded-full animate-ping" />
+                    )}
+                 </button>
+                 <button 
+                   onClick={() => setActiveTab('settings')}
+                   className="w-12 h-12 bg-brand-black text-white rounded-2xl flex items-center justify-center shadow-lg hover:bg-brand-accent transition-all duration-300"
+                 >
+                    <Settings className="w-5 h-5" />
+                 </button>
+               </div>
+            </header>
+
+            {/* Standard Tab Layout */}
+            <main className="flex-1 px-6 sm:px-12 py-8">
+              <AnimatePresence mode="wait">
                 <motion.div
-                  key="dashboard"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
+                  key={activeTab}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <Dashboard 
-                    expenses={expenses} 
-                    income={income} 
-                    budget={budget} 
-                    goals={goals} 
-                    bills={bills}
-                    presets={presets}
-                    selectedDate={selectedDate}
-                    onDateChange={setSelectedDate}
-                    onQuickAdd={addFromPreset}
-                    onToggleBill={toggleBillPaid}
-                    onManageBills={() => setActiveTab('bills')}
-                    onUpdateBudget={updateBudget}
-                    onNavigate={setActiveTab}
-                    onSync={() => setIsSmartImporterOpen(true)}
-                    showInstallBtn={showInstallBtn}
-                    onInstall={handleInstall}
-                  />
+                  {activeTab === 'dashboard' && (
+                    <Dashboard 
+                      expenses={expenses} 
+                      income={income} 
+                      budget={budget} 
+                      goals={goals} 
+                      bills={bills}
+                      presets={presets}
+                      selectedDate={selectedDate}
+                      onDateChange={setSelectedDate}
+                      onQuickAdd={addFromPreset}
+                      onToggleBill={toggleBillPaid}
+                      onManageBills={() => setActiveTab('bills')}
+                      onUpdateBudget={updateBudget}
+                      onNavigate={setActiveTab}
+                      onSync={() => setIsSmartImporterOpen(true)}
+                    />
+                  )}
+                  {activeTab === 'expenses' && <ExpenseList expenses={filteredExpenses} income={filteredIncome} onDeleteExpense={deleteExpense} onDeleteIncome={deleteIncome} selectedDate={selectedDate} onDateChange={setSelectedDate} />}
+                  {activeTab === 'goals' && <SavingsGoals goals={goals} onUpdate={updateGoal} onDelete={deleteGoal} onAddClick={() => setIsAddGoalModalOpen(true)} />}
+                  {activeTab === 'bills' && <Bills bills={bills} userId={user.uid} categories={Object.keys(budget.categories)} onToggle={toggleBillPaid} onDelete={deleteBill} />}
+                  {activeTab === 'insights' && <Insights expenses={filteredExpenses} income={filteredIncome} budget={budget} userStats={userStats} selectedDate={selectedDate} />}
+                  {activeTab === 'settings' && <BudgetSettings budget={budget} onUpdate={updateBudget} showInstallBtn={showInstallBtn} onInstall={handleInstall} />}
                 </motion.div>
-              )}
+              </AnimatePresence>
+            </main>
+          </div>
 
-              {activeTab === 'expenses' && (
-                <motion.div
-                  key="expenses"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <ExpenseList 
-                    expenses={filteredExpenses} 
-                    income={filteredIncome}
-                    onDeleteExpense={deleteExpense} 
-                    onDeleteIncome={deleteIncome}
-                    selectedDate={selectedDate}
-                    onDateChange={setSelectedDate}
-                  />
-                </motion.div>
-              )}
-
-              {activeTab === 'goals' && (
-                <motion.div
-                  key="goals"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <SavingsGoals 
-                    goals={goals} 
-                    onUpdate={updateGoal} 
-                    onDelete={deleteGoal}
-                    onAddClick={() => setIsAddGoalModalOpen(true)}
-                  />
-                </motion.div>
-              )}
-
-              {activeTab === 'bills' && (
-                <motion.div
-                  key="bills"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Bills 
-                    bills={bills} 
-                    userId={user.uid} 
-                    categories={Object.keys(budget.categories)} 
-                    onToggle={toggleBillPaid}
-                    onDelete={deleteBill}
-                  />
-                </motion.div>
-              )}
-
-              {activeTab === 'insights' && (
-                <motion.div
-                  key="insights"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Insights 
-                    expenses={filteredExpenses} 
-                    income={filteredIncome} 
-                    budget={budget} 
-                    userStats={userStats} 
-                    selectedDate={selectedDate}
-                  />
-                </motion.div>
-              )}
-
-              {activeTab === 'settings' && (
-                <motion.div
-                  key="settings"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <BudgetSettings 
-                    budget={budget} 
-                    onUpdate={updateBudget} 
-                    showInstallBtn={showInstallBtn}
-                    onInstall={handleInstall}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </main>
-
-          <nav className="fixed bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 w-[94%] max-w-lg z-50">
-            <div className="nav-blur rounded-[32px] sm:rounded-[40px] px-2 sm:px-3 py-2 sm:py-3 flex items-center justify-between shadow-[0_20px_80px_rgba(0,0,0,0.15)] relative">
-              <NavButton 
-                active={activeTab === 'dashboard'} 
-                onClick={() => setActiveTab('dashboard')}
-                icon={<LayoutGrid className="w-5 h-5" />}
-                label="Home"
-              />
-              <NavButton 
-                active={activeTab === 'expenses'} 
-                onClick={() => setActiveTab('expenses')}
-                icon={<History className="w-5 h-5" />}
-                label="Logs"
-              />
+          {/* Mobile High-Fidelity Bottom Bar */}
+          <nav className="fixed lg:hidden bottom-8 left-1/2 -translate-x-1/2 w-[92%] max-w-sm z-50">
+            <div className="nav-blur rounded-[32px] p-2 flex items-center justify-between shadow-[0_32px_100px_rgba(0,0,0,0.25)] ring-1 ring-white/20">
+              <NavButton active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={<LayoutGrid className="w-5 h-5" />} label="Home" />
+              <NavButton active={activeTab === 'expenses'} onClick={() => setActiveTab('expenses')} icon={<History className="w-5 h-5" />} label="Logs" />
               
-              {/* Central Action Button */}
-              <div className="relative -top-3">
+              {/* Portal Trigger */}
+              <div className="relative -top-1">
                 <button 
                   onClick={() => {
                     sound.playClick();
                     setIsAddModalOpen(true);
                   }}
-                  className="w-16 h-16 bg-brand-black text-white rounded-[24px] shadow-[0_20px_40px_rgba(0,0,0,0.3)] flex items-center justify-center active:scale-90 transition-all hover:scale-105 border-4 border-white"
-                  aria-label="Add Transaction"
+                  className="w-16 h-16 bg-brand-black text-white rounded-[24px] shadow-2xl flex items-center justify-center active:scale-95 transition-all border-[6px] border-white"
                 >
                   <Plus className="w-8 h-8" />
                 </button>
               </div>
 
-              <NavButton 
-                active={activeTab === 'insights'} 
-                onClick={() => setActiveTab('insights')}
-                icon={<BrainCircuit className="w-5 h-5" />}
-                label="Coach"
-              />
-              <NavButton 
-                active={activeTab === 'goals'} 
-                onClick={() => setActiveTab('goals')}
-                icon={<Target className="w-5 h-5" />}
-                label="Goals"
-              />
+              <NavButton active={activeTab === 'insights'} onClick={() => setActiveTab('insights')} icon={<BrainCircuit className="w-5 h-5" />} label="Coach" />
+              <NavButton active={activeTab === 'goals'} onClick={() => setActiveTab('goals')} icon={<Target className="w-5 h-5" />} label="Goals" />
             </div>
           </nav>
 
-          <FinancialChat 
-            expenses={expenses}
-            income={income}
-            budget={budget}
-            goals={goals}
-          />
+          <FinancialChat expenses={expenses} income={income} budget={budget} goals={goals} />
 
           {/* Add Transaction Modal */}
           <AnimatePresence>
@@ -879,7 +836,7 @@ export default function App() {
               />
             )}
           </AnimatePresence>
-        </>
+        </div>
       )}
     </div>
   );
