@@ -106,14 +106,21 @@ export default function Dashboard({
   const totalSpent = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
   const totalIncome = filteredIncome.reduce((sum, i) => sum + i.amount, 0);
   
-  // Real-world logic: If we have captured income transactions, they represent the true source.
-  // We use the budgeted salary as a projected floor if no income is logged, 
-  // but we prioritize captured reality once we have it.
-  const effectiveInflow = Math.max(totalIncome, budget.salary || 0);
+  // Real-world logic: 
+  // 1. If we have captured income transactions, they ARE the reality.
+  // 2. budgeted salary is ONLY a projection for planning, not for actual flow calculation.
+  const effectiveInflow = totalIncome > 0 ? totalIncome : (budget.salary || 0);
   const effectiveLimit = budget.monthlyLimit > 0 ? budget.monthlyLimit : effectiveInflow;
   const percentSpent = effectiveLimit > 0 ? (totalSpent / effectiveLimit) * 100 : 0;
   const isOverBudget = percentSpent > 100;
-  const netFlow = effectiveInflow - totalSpent;
+  
+  // The user says they have 8k left but app shows minus.
+  // This means the "Net Flow" calculation (Income - Expenses) doesn't account for 
+  // the money they already HAD in the account at the start of the month.
+  const monthlyNet = effectiveInflow - totalSpent;
+  
+  // We'll use the openingBalance (even if the Vault UI is gone) to calculate the "Visible Cash"
+  const totalBalance = (budget.openingBalance || 0) + monthlyNet;
 
   // Running Total / Wallet Balance (Reality Reconciliation)
   const walletBalance = useMemo(() => {
@@ -240,29 +247,37 @@ export default function Dashboard({
           <div className="lg:col-span-7 space-y-10">
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 rounded-full border border-white/10 backdrop-blur-md">
-                  <Zap className="w-3 h-3 text-brand-accent fill-brand-accent" />
-                  <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/70">
-                    {netFlow >= 0 ? 'Surplus Optimized' : 'Allocation Required'}
+                <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-accent/10 rounded-full border border-brand-accent/20 backdrop-blur-md">
+                  <ShieldCheck className="w-3 h-3 text-brand-accent fill-brand-accent" />
+                  <span className="text-[9px] font-black uppercase tracking-[0.3em] text-brand-accent/70">
+                    Bank Account Reality
                   </span>
                 </span>
+                
+                <button 
+                  onClick={() => onNavigate?.('settings')}
+                  className="flex items-center gap-2 px-4 py-1.5 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 transition-all group/sync"
+                >
+                  <TrendingUp className="w-3 h-3 text-white/40 group-hover/sync:text-brand-accent" />
+                  <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/40 group-hover/sync:text-white">
+                    Calibrate Balance
+                  </span>
+                </button>
               </div>
 
               <h2 className={cn(
                 "text-7xl sm:text-9xl font-display font-medium tracking-tighter leading-none transition-colors",
-                netFlow >= 0 ? "text-white" : "text-red-400"
+                totalBalance >= 0 ? "text-white" : "text-red-400"
               )}>
-                ₹{netFlow.toLocaleString('en-IN')}
+                ₹{totalBalance.toLocaleString('en-IN')}
               </h2>
               <div className="flex items-center gap-2 group/help cursor-help">
                 <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.4em] pl-2">
-                  {netFlow >= 0 ? 'Monthly Surplus Balance' : 'Monthly Cash Deficit'}
+                  {totalBalance >= 0 ? 'Current Account Balance' : 'Account Overdrawn'}
                 </p>
                 <HelpCircle className="w-3 h-3 text-white/20 group-hover/help:text-brand-accent transition-colors" />
-                <div className="absolute top-full left-0 mt-2 opacity-0 group-hover/help:opacity-100 transition-opacity bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-[9px] text-white/60 max-w-[200px] z-50">
-                  {netFlow < 0 
-                    ? "Negative means you've spent more than your income this month. Realized surplus depends on total income captured." 
-                    : "This represents how much money is left over from this month's income after all recorded expenses."}
+                <div className="absolute top-full left-0 mt-2 opacity-0 group-hover/help:opacity-100 transition-opacity bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-[9px] text-white/60 max-w-[240px] z-50">
+                  Total available funds including balance carried forward from previous months. If this doesn't match your bank, use "Calibrate" to sync.
                 </div>
               </div>
             </div>
@@ -271,21 +286,22 @@ export default function Dashboard({
               <div className="space-y-3">
                 <div className="flex items-center gap-2 opacity-40">
                   <ArrowUpRight className="w-4 h-4 text-green-400" />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white">Total Source</span>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white">Actual Inflow</span>
                 </div>
                 <div className="relative group">
                   <p className="text-2xl sm:text-3xl font-display font-medium text-white">
-                    ₹{effectiveInflow.toLocaleString('en-IN')}
+                    ₹{totalIncome.toLocaleString('en-IN')}
                   </p>
                   <div className="absolute top-full left-0 mt-2 bg-white/10 backdrop-blur-xl border border-white/20 p-4 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 min-w-[200px] shadow-2xl">
+                     <p className="text-[9px] font-black uppercase text-brand-accent mb-2">Income Source Audit</p>
                      <div className="space-y-2">
                         <div className="flex justify-between text-[10px] text-white/50">
-                           <span className="uppercase tracking-widest">Base Salary</span>
-                           <span className="font-mono">₹{(budget.salary || 0).toLocaleString()}</span>
+                           <span className="uppercase tracking-widest">Captured Reality</span>
+                           <span className="font-mono">₹{totalIncome.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between text-[10px] text-white/50 border-t border-white/5 pt-2">
-                           <span className="uppercase tracking-widest">Extra Credits</span>
-                           <span className="font-mono text-green-400">+₹{totalIncome > (budget.salary || 0) ? (totalIncome - (budget.salary || 0)).toLocaleString() : '0'}</span>
+                           <span className="uppercase tracking-widest">Month Target</span>
+                           <span className="font-mono">₹{(budget.salary || 0).toLocaleString()}</span>
                         </div>
                      </div>
                   </div>

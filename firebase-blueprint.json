@@ -62,6 +62,8 @@
       "type": "object",
       "properties": {
         "monthlyLimit": { "type": "number" },
+        "salary": { "type": "number" },
+        "openingBalance": { "type": "number" },
         "categories": { "type": "object" },
         "userId": { "type": "string" }
       },

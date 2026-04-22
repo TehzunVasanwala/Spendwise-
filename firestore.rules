@@ -141,10 +141,11 @@ service cloud.firestore {
     }
 
     function isValidBudget(data) {
-      return data.keys().hasOnly(['monthlyLimit', 'salary', 'categories', 'userId']) &&
-             data.keys().hasAll(['monthlyLimit', 'categories', 'userId']) &&
+      return data.keys().hasAll(['monthlyLimit', 'categories', 'userId']) &&
+             data.keys().hasOnly(['monthlyLimit', 'salary', 'openingBalance', 'categories', 'userId']) &&
              data.monthlyLimit is number && data.monthlyLimit > 0 &&
              (!('salary' in data) || (data.salary is number && data.salary >= 0)) &&
+             (!('openingBalance' in data) || (data.openingBalance is number)) &&
              data.categories is map &&
              data.userId == request.auth.uid;
     }

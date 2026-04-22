@@ -178,6 +178,26 @@ export default function BudgetSettings({ budget, onUpdate, showInstallBtn, onIns
                 className="w-full pl-8 bg-transparent text-2xl font-display font-bold outline-none placeholder:text-brand-gray-light font-mono"
               />
             </div>
+
+            <div className="bg-brand-accent/5 p-6 rounded-3xl border border-brand-accent/10 mt-8">
+              <label className="text-[10px] font-bold text-brand-accent uppercase tracking-[0.2em] mb-4 block px-1">Bank Reality Calibration</label>
+              <div className="relative border-b-2 border-brand-accent/20 pb-2 focus-within:border-brand-accent transition-colors">
+                <span className="absolute left-0 bottom-2 text-2xl font-display font-bold text-brand-accent/40">₹</span>
+                <input 
+                  type="number"
+                  inputMode="decimal"
+                  value={openingBalance}
+                  onChange={(e) => {
+                    setOpeningBalance(e.target.value);
+                    setIsDirty(true);
+                  }}
+                  className="w-full pl-8 bg-transparent text-2xl font-display font-bold outline-none placeholder:text-brand-accent/20 font-mono text-brand-accent"
+                />
+              </div>
+              <p className="text-[9px] font-bold text-brand-accent/60 uppercase tracking-widest mt-4 leading-relaxed">
+                Enter your starting bank balance to reconcile your account. The dashboard will use this to show your accurate remaining funds.
+              </p>
+            </div>
           </div>
 
           <div>
